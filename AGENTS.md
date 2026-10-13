@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-This repository is a single-module Spring Boot 3.5.16 Web template using Java 21 and Maven. Production code lives in `src/main/java/org/example/`: `Application` is the minimal entry point, `controller/` contains HTTP endpoints, and `config/` contains infrastructure components such as `StartupLogger`. Configuration lives in `src/main/resources/`. Tests mirror the application package under `src/test/java/org/example/`. Generated classes, reports, and executable JARs belong in `target/`; do not commit them. There are no frontend assets currently.
+This repository is a single-module Spring Boot 4.1.1 Web template using Java 21 and Maven. Production code lives in `src/main/java/org/example/`: `Application` is the minimal entry point, `controller/` contains HTTP endpoints, and `config/` contains infrastructure components such as `StartupLogger`. Configuration lives in `src/main/resources/`. Tests mirror the application package under `src/test/java/org/example/`. Generated classes, reports, and executable JARs belong in `target/`; do not commit them. There are no frontend assets currently.
 
 ## Build, Test, and Development Commands
 

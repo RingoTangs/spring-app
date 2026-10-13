@@ -1,6 +1,7 @@
 package org.example.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.jspecify.annotations.Nullable;
@@ -51,7 +52,7 @@ public class WebExceptionFallbackConfiguration implements WebMvcConfigurer {
             response.setContentLength(body.length);
             response.getOutputStream().write(body);
             return new ModelAndView();
-        } catch (IOException | IllegalStateException writeException) {
+        } catch (JacksonException | IOException | IllegalStateException writeException) {
             log.error("Failed to write fallback error response", writeException);
             return null;
         }
