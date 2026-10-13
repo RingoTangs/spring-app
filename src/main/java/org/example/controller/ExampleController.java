@@ -58,7 +58,7 @@ public class ExampleController {
     @ApiResponse(responseCode = "200", description = "返回校验通过的请求体",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                     schema = @Schema(implementation = ValidationRequest.class)))
-    @ApiResponse(responseCode = "400", description = "请求参数错误",
+    @ApiResponse(responseCode = "400", description = "请求参数错误：VALIDATION_FAILED、INVALID_REQUEST_BODY",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                     schema = @Schema(implementation = ErrorResponse.class)))
     @PostMapping(value = "/validation/body", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -70,7 +70,7 @@ public class ExampleController {
     @ApiResponse(responseCode = "200", description = "返回校验通过的年龄",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                     schema = @Schema(implementation = AgeResponse.class)))
-    @ApiResponse(responseCode = "400", description = "请求参数错误",
+    @ApiResponse(responseCode = "400", description = "请求参数错误：VALIDATION_FAILED、MISSING_PARAMETER、INVALID_PARAMETER_TYPE",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                     schema = @Schema(implementation = ErrorResponse.class)))
     @GetMapping("/validation/query")

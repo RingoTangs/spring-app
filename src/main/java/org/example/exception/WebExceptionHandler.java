@@ -18,11 +18,29 @@ public class WebExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(WebExceptionHandler.class);
 
-    @ExceptionHandler({BindException.class, MissingServletRequestParameterException.class,
-            MissingRequestHeaderException.class, MethodArgumentTypeMismatchException.class,
-            HttpMessageNotReadableException.class})
-    public ResponseEntity<ErrorResponse> handleInvalidRequest(Exception exception) {
-        return errorResponse(CommonError.BAD_REQUEST);
+    @ExceptionHandler(BindException.class)
+    public ResponseEntity<ErrorResponse> handleValidation(BindException exception) {
+        return errorResponse(CommonError.VALIDATION_FAILED);
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ErrorResponse> handleMissingParameter(MissingServletRequestParameterException exception) {
+        return errorResponse(CommonError.MISSING_PARAMETER);
+    }
+
+    @ExceptionHandler(MissingRequestHeaderException.class)
+    public ResponseEntity<ErrorResponse> handleMissingHeader(MissingRequestHeaderException exception) {
+        return errorResponse(CommonError.MISSING_HEADER);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidParameterType(MethodArgumentTypeMismatchException exception) {
+        return errorResponse(CommonError.INVALID_PARAMETER_TYPE);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidRequestBody(HttpMessageNotReadableException exception) {
+        return errorResponse(CommonError.INVALID_REQUEST_BODY);
     }
 
     @ExceptionHandler(HandlerMethodValidationException.class)
@@ -31,7 +49,7 @@ public class WebExceptionHandler {
             log.error("Controller return value validation failed", exception);
             return errorResponse(CommonError.INTERNAL_SERVER_ERROR);
         }
-        return errorResponse(CommonError.BAD_REQUEST);
+        return errorResponse(CommonError.VALIDATION_FAILED);
     }
 
     private ResponseEntity<ErrorResponse> errorResponse(ErrorCode error) {

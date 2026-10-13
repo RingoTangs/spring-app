@@ -43,23 +43,22 @@ class ValidationTest {
     @ParameterizedTest
     @ValueSource(strings = {"{}", "{\"name\":\" \",\"age\":18}",
             "{\"name\":null,\"age\":18}", "{\"name\":\"Alice\"}",
-            "{\"name\":\"Alice\",\"age\":null}", "{\"name\":\"Alice\",\"age\":0}",
-            "{", "{\"name\":\"Alice\",\"age\":\"invalid\"}", ""})
-    void invalidBodyReturnsFixedError(String body) throws Exception {
+            "{\"name\":\"Alice\",\"age\":null}", "{\"name\":\"Alice\",\"age\":0}"})
+    void bodyConstraintFailuresReturnValidationCode(String body) throws Exception {
         assertBadRequest(mockMvc.perform(post("/examples/validation/body")
-                .contentType(MediaType.APPLICATION_JSON).content(body)));
+                .contentType(MediaType.APPLICATION_JSON).content(body)), "VALIDATION_FAILED");
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"0", "-1", "invalid"})
-    void invalidQueryReturnsFixedError(String age) throws Exception {
-        assertBadRequest(mockMvc.perform(get("/examples/validation/query").param("age", age)));
+    @ValueSource(strings = {"0", "-1"})
+    void queryConstraintFailuresReturnValidationCode(String age) throws Exception {
+        assertBadRequest(mockMvc.perform(get("/examples/validation/query").param("age", age)), "VALIDATION_FAILED");
     }
 
     @Test
     void missingParameterAndHeaderReturnFixedError() throws Exception {
-        assertBadRequest(mockMvc.perform(get("/examples/validation/query")));
-        assertBadRequest(mockMvc.perform(get("/test/validation/header")));
+        assertBadRequest(mockMvc.perform(get("/examples/validation/query")), "MISSING_PARAMETER");
+        assertBadRequest(mockMvc.perform(get("/test/validation/header")), "MISSING_HEADER");
     }
 
     @Test
@@ -72,12 +71,25 @@ class ValidationTest {
                         """, JsonCompareMode.STRICT));
     }
 
-    private void assertBadRequest(ResultActions result) throws Exception {
+    @ParameterizedTest
+    @ValueSource(strings = {"{", "{\"name\":\"Alice\",\"age\":\"invalid\"}", ""})
+    void unreadableBodyReturnsBodyErrorCode(String body) throws Exception {
+        assertBadRequest(mockMvc.perform(post("/examples/validation/body")
+                .contentType(MediaType.APPLICATION_JSON).content(body)), "INVALID_REQUEST_BODY");
+    }
+
+    @Test
+    void invalidQueryTypeReturnsTypeErrorCode() throws Exception {
+        assertBadRequest(mockMvc.perform(get("/examples/validation/query").param("age", "invalid")),
+                "INVALID_PARAMETER_TYPE");
+    }
+
+    private void assertBadRequest(ResultActions result, String code) throws Exception {
         result.andExpect(status().isBadRequest())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(content().json("""
-                        {"code":"BAD_REQUEST","message":"请求参数错误"}
-                        """, JsonCompareMode.STRICT));
+                        {"code":"%s","message":"请求参数错误"}
+                        """.formatted(code), JsonCompareMode.STRICT));
     }
 
     @RestController
