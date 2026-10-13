@@ -15,6 +15,10 @@
     <packaging>jar</packaging>
 
     <name>spring-app</name>
+    <description>
+        Spring Boot template with Java 21, REST API examples, request validation,
+        business exception handling, and development-only Swagger UI.
+    </description>
 
     <properties>
         <java.version>21</java.version>
