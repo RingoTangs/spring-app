@@ -7,8 +7,7 @@ import java.util.Objects;
 
 public class BusinessException extends RuntimeException {
 
-    @Serial
-    private static final long serialVersionUID = 1L;
+    @Serial private static final long serialVersionUID = 1L;
 
     private final String code;
     private final HttpStatus status;

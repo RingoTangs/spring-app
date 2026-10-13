@@ -1,21 +1,23 @@
 package org.example.exception;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
-
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class BusinessExceptionTest {
 
     @Test
     void rejectsNullConstructorArguments() {
-        assertThrows(NullPointerException.class,
+        assertThrows(
+                NullPointerException.class,
                 () -> new BusinessException(null, "message", HttpStatus.BAD_REQUEST));
-        assertThrows(NullPointerException.class,
+        assertThrows(
+                NullPointerException.class,
                 () -> new BusinessException("CODE", null, HttpStatus.BAD_REQUEST));
-        assertThrows(NullPointerException.class,
-                () -> new BusinessException("CODE", "message", null));
+        assertThrows(
+                NullPointerException.class, () -> new BusinessException("CODE", "message", null));
     }
 
     @Test
@@ -26,7 +28,9 @@ class BusinessExceptionTest {
     @Test
     void rejectsNullCustomMessageArguments() {
         assertThrows(NullPointerException.class, () -> BusinessException.of(null, "message"));
-        assertThrows(NullPointerException.class, () -> BusinessException.of(CommonError.NOT_FOUND, null));
+        assertThrows(
+                NullPointerException.class,
+                () -> BusinessException.of(CommonError.NOT_FOUND, null));
     }
 
     @Test

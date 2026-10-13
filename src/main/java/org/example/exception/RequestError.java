@@ -3,7 +3,6 @@ package org.example.exception;
 import org.springframework.http.HttpStatus;
 
 public enum RequestError implements ErrorCode {
-
     VALIDATION_FAILED("VALIDATION_FAILED", "请求参数校验失败"),
     MISSING_PARAMETER("MISSING_PARAMETER", "缺少必填请求参数"),
     MISSING_HEADER("MISSING_HEADER", "缺少必填请求头"),

@@ -1,6 +1,7 @@
 package org.example.config;
 
 import jakarta.servlet.ServletContext;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -33,9 +34,11 @@ public class StartupLogger {
 
     private void logProfiles(Environment environment) {
         String[] activeProfiles = environment.getActiveProfiles();
-        String profiles = activeProfiles.length > 0
-                ? String.join(",", activeProfiles)
-                : "none; default profiles: " + String.join(",", environment.getDefaultProfiles());
+        String profiles =
+                activeProfiles.length > 0
+                        ? String.join(",", activeProfiles)
+                        : "none; default profiles: "
+                                + String.join(",", environment.getDefaultProfiles());
         log.info("Active profiles: {}", profiles);
     }
 
@@ -43,8 +46,10 @@ public class StartupLogger {
         if (environment.getProperty("springdoc.swagger-ui.enabled", Boolean.class, false)
                 && environment.getProperty("springdoc.api-docs.enabled", Boolean.class, false)
                 && applicationContext instanceof ServletWebServerApplicationContext webContext) {
-            String scheme = environment.getProperty("server.ssl.enabled", Boolean.class, false)
-                    ? "https" : "http";
+            String scheme =
+                    environment.getProperty("server.ssl.enabled", Boolean.class, false)
+                            ? "https"
+                            : "http";
             var webServer = webContext.getWebServer();
             if (webServer == null) {
                 return;

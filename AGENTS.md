@@ -8,8 +8,10 @@ This repository is a single-module Spring Boot 4.1.1 Web template using Java 21 
 
 Use JDK 21 and an installed Maven; this repository has no Maven Wrapper.
 
-- `mvn clean verify`: clean stale artifacts, run tests, and package the executable JAR.
+- `mvn clean verify`: clean stale artifacts, run tests, package the executable JAR, and check Java formatting.
 - `mvn test`: run the test suite without packaging.
+- `mvn spotless:apply`: format production and test Java sources.
+- `mvn spotless:check`: check Java formatting without changing files.
 - `mvn spring-boot:run -Dspring-boot.run.profiles=dev`: run locally with Swagger enabled.
 - `java -jar target/spring-app-0.0.1-SNAPSHOT.jar --spring.profiles.active=dev`: run the packaged application.
 
@@ -17,7 +19,7 @@ The default port is 8080. `GET /examples/success` returns JSON containing the me
 
 ## Coding Style & Naming Conventions
 
-Follow existing Java style: four-space indentation, opening braces on the declaration line, PascalCase class names, camelCase methods and fields, and lowercase package names. Use two-space YAML indentation. `.editorconfig` requires UTF-8, LF endings, and a final newline. No formatter or lint plugin is configured. Keep startup logic in components rather than expanding `Application.main`. Let the Boot parent manage dependency versions; declare additional library versions in POM properties.
+Use Spotless with the pinned Google Java Format AOSP style: four-space indentation, opening braces on the declaration line, PascalCase class names, camelCase methods and fields, and lowercase package names. Use two-space YAML indentation. `.editorconfig` requires UTF-8, LF endings, and a final newline. Spotless controls Java layout and import ordering; run `mvn spotless:apply` before submitting changes. Formatting checks run during `verify`. No separate lint plugin is configured. Keep startup logic in components rather than expanding `Application.main`. Let the Boot parent manage dependency versions; declare additional library versions in POM properties.
 
 ## Testing Guidelines
 
