@@ -51,6 +51,16 @@ class WebExceptionHandlerTest {
     @RestController
     static class TestController {
 
+        @GetMapping("/test/common-error")
+        String commonError() {
+            throw BusinessException.of(CommonError.NOT_FOUND);
+        }
+
+        @GetMapping("/test/custom-error")
+        String customError() {
+            throw BusinessException.of(TestError.USER_NOT_FOUND);
+        }
+
         @GetMapping("/test/business-error")
         String businessError(@RequestParam HttpStatus status) {
             throw new BusinessException("BUSINESS_ERROR", "业务操作失败", status);
@@ -99,5 +109,44 @@ class WebExceptionHandlerTest {
                 .andExpect(status().isBadRequest());
         mockMvc.perform(get("/test/missing")).andExpect(status().isNotFound());
         mockMvc.perform(post("/test/business-error")).andExpect(status().isMethodNotAllowed());
+    }
+
+    @Test
+    void commonErrorFactoryReturnsExpectedResponse() throws Exception {
+        mockMvc.perform(get("/test/common-error"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(content().json("""
+                        {"code":"NOT_FOUND","message":"资源不存在"}
+                        """, org.springframework.test.json.JsonCompareMode.STRICT));
+    }
+
+    @Test
+    void customErrorFactoryReturnsExpectedResponse() throws Exception {
+        mockMvc.perform(get("/test/custom-error"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(content().json("""
+                        {"code":"USER_NOT_FOUND","message":"用户不存在"}
+                        """, org.springframework.test.json.JsonCompareMode.STRICT));
+    }
+
+    private enum TestError implements ErrorCode {
+        USER_NOT_FOUND;
+
+        @Override
+        public String getCode() {
+            return "USER_NOT_FOUND";
+        }
+
+        @Override
+        public HttpStatus getStatus() {
+            return HttpStatus.NOT_FOUND;
+        }
+
+        @Override
+        public String getMessage() {
+            return "用户不存在";
+        }
     }
 }

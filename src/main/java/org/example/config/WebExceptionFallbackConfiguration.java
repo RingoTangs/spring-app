@@ -1,11 +1,11 @@
 package org.example.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.example.exception.CommonError;
 import org.example.exception.ErrorResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 import org.springframework.web.servlet.ModelAndView;
@@ -34,10 +34,11 @@ public class WebExceptionFallbackConfiguration implements WebMvcConfigurer {
                 return null;
             }
             try {
+                CommonError error = CommonError.INTERNAL_SERVER_ERROR;
                 byte[] body = objectMapper.writeValueAsBytes(
-                        new ErrorResponse("INTERNAL_SERVER_ERROR", "服务器内部错误"));
+                        new ErrorResponse(error.getCode(), error.getMessage()));
                 response.resetBuffer();
-                response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+                response.setStatus(error.getStatus().value());
                 response.setCharacterEncoding(StandardCharsets.UTF_8.name());
                 response.setContentType(MediaType.APPLICATION_JSON_VALUE);
                 response.setContentLength(body.length);
