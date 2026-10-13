@@ -35,6 +35,18 @@ class SwaggerDevTest {
     }
 
     @Test
+    void documentsValidationExamples() throws Exception {
+        mockMvc.perform(get("/v3/api-docs"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.paths['/examples/validation/body'].post.responses['400']"
+                        + ".content['application/json'].schema['$ref']")
+                        .value("#/components/schemas/ErrorResponse"))
+                .andExpect(jsonPath("$.paths['/examples/validation/query'].get.responses['400']"
+                        + ".content['application/json'].schema['$ref']")
+                        .value("#/components/schemas/ErrorResponse"));
+    }
+
+    @Test
     void swaggerUiIsAvailable() throws Exception {
         mockMvc.perform(get("/swagger-ui.html"))
                 .andExpect(status().isFound())

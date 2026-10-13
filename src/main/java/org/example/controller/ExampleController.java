@@ -1,5 +1,10 @@
 package org.example.controller;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import org.jspecify.annotations.Nullable;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -11,6 +16,9 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
 @RequestMapping(value = "/examples", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -44,5 +52,36 @@ public class ExampleController {
     }
 
     public record SuccessResponse(String message) {
+    }
+
+    @Operation(summary = "JSON 请求体校验示例")
+    @ApiResponse(responseCode = "200", description = "返回校验通过的请求体",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = ValidationRequest.class)))
+    @ApiResponse(responseCode = "400", description = "请求参数错误",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = ErrorResponse.class)))
+    @PostMapping(value = "/validation/body", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ValidationRequest validateBody(@Valid @RequestBody ValidationRequest request) {
+        return request;
+    }
+
+    @Operation(summary = "查询参数校验示例")
+    @ApiResponse(responseCode = "200", description = "返回校验通过的年龄",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = AgeResponse.class)))
+    @ApiResponse(responseCode = "400", description = "请求参数错误",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = ErrorResponse.class)))
+    @GetMapping("/validation/query")
+    public AgeResponse validateQuery(@RequestParam @Min(1) Integer age) {
+        return new AgeResponse(age);
+    }
+
+    public record ValidationRequest(@NotBlank @Nullable String name,
+                                    @NotNull @Min(1) @Nullable Integer age) {
+    }
+
+    public record AgeResponse(Integer age) {
     }
 }
