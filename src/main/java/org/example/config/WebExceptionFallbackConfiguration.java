@@ -1,6 +1,9 @@
 package org.example.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.jspecify.annotations.Nullable;
 import org.example.exception.CommonError;
 import org.example.exception.ErrorResponse;
 import org.slf4j.Logger;
@@ -28,26 +31,29 @@ public class WebExceptionFallbackConfiguration implements WebMvcConfigurer {
 
     @Override
     public void extendHandlerExceptionResolvers(List<HandlerExceptionResolver> resolvers) {
-        resolvers.add((request, response, handler, exception) -> {
-            log.error("Unhandled exception during {} {}", request.getMethod(), request.getRequestURI(), exception);
-            if (response.isCommitted()) {
-                return null;
-            }
-            try {
-                CommonError error = CommonError.INTERNAL_SERVER_ERROR;
-                byte[] body = objectMapper.writeValueAsBytes(
-                        new ErrorResponse(error.getCode(), error.getMessage()));
-                response.resetBuffer();
-                response.setStatus(error.getStatus().value());
-                response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-                response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-                response.setContentLength(body.length);
-                response.getOutputStream().write(body);
-                return new ModelAndView();
-            } catch (IOException | IllegalStateException writeException) {
-                log.error("Failed to write fallback error response", writeException);
-                return null;
-            }
-        });
+        resolvers.add(this::resolveUnexpectedException);
+    }
+
+    private @Nullable ModelAndView resolveUnexpectedException(HttpServletRequest request,
+            HttpServletResponse response, @Nullable Object handler, Exception exception) {
+        log.error("Unhandled exception during {} {}", request.getMethod(), request.getRequestURI(), exception);
+        if (response.isCommitted()) {
+            return null;
+        }
+        try {
+            CommonError error = CommonError.INTERNAL_SERVER_ERROR;
+            byte[] body = objectMapper.writeValueAsBytes(
+                    new ErrorResponse(error.getCode(), error.getMessage()));
+            response.resetBuffer();
+            response.setStatus(error.getStatus().value());
+            response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            response.setContentLength(body.length);
+            response.getOutputStream().write(body);
+            return new ModelAndView();
+        } catch (IOException | IllegalStateException writeException) {
+            log.error("Failed to write fallback error response", writeException);
+            return null;
+        }
     }
 }

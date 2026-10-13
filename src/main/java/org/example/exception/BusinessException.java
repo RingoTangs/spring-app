@@ -12,9 +12,14 @@ public class BusinessException extends RuntimeException {
     private final HttpStatus status;
 
     public BusinessException(String code, String message, HttpStatus status) {
-        super(message);
-        this.code = code;
-        this.status = status;
+        super(Objects.requireNonNull(message, "message must not be null"));
+        this.code = Objects.requireNonNull(code, "code must not be null");
+        this.status = Objects.requireNonNull(status, "status must not be null");
+    }
+
+    @Override
+    public String getMessage() {
+        return Objects.requireNonNull(super.getMessage());
     }
 
     public String getCode() {
