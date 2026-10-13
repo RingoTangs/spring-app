@@ -51,6 +51,11 @@ class WebExceptionHandlerTest {
     @RestController
     static class TestController {
 
+        @GetMapping("/test/dynamic-error")
+        String dynamicError(@RequestParam String userId) {
+            throw BusinessException.of(CommonError.NOT_FOUND, "用户 %s 不存在".formatted(userId));
+        }
+
         @GetMapping("/test/common-error")
         String commonError() {
             throw BusinessException.of(CommonError.NOT_FOUND);
@@ -118,6 +123,16 @@ class WebExceptionHandlerTest {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(content().json("""
                         {"code":"NOT_FOUND","message":"资源不存在"}
+                        """, org.springframework.test.json.JsonCompareMode.STRICT));
+    }
+
+    @Test
+    void dynamicMessageKeepsEnumStatusAndCode() throws Exception {
+        mockMvc.perform(get("/test/dynamic-error").param("userId", "alice"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(content().json("""
+                        {"code":"NOT_FOUND","message":"用户 alice 不存在"}
                         """, org.springframework.test.json.JsonCompareMode.STRICT));
     }
 

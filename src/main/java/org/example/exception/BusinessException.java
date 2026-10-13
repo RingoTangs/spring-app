@@ -31,6 +31,11 @@ public class BusinessException extends RuntimeException {
         return new BusinessException(error.getCode(), error.getMessage(), error.getStatus());
     }
 
+    public static BusinessException of(ErrorCode error, String message) {
+        Objects.requireNonNull(error, "error must not be null");
+        return new BusinessException(error.getCode(), message, error.getStatus());
+    }
+
     public HttpStatus getStatus() {
         return status;
     }
