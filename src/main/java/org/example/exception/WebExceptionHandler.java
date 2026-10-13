@@ -20,27 +20,27 @@ public class WebExceptionHandler {
 
     @ExceptionHandler(BindException.class)
     public ResponseEntity<ErrorResponse> handleValidation(BindException exception) {
-        return errorResponse(CommonError.VALIDATION_FAILED);
+        return errorResponse(RequestError.VALIDATION_FAILED);
     }
 
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ResponseEntity<ErrorResponse> handleMissingParameter(MissingServletRequestParameterException exception) {
-        return errorResponse(CommonError.MISSING_PARAMETER);
+        return errorResponse(RequestError.MISSING_PARAMETER);
     }
 
     @ExceptionHandler(MissingRequestHeaderException.class)
     public ResponseEntity<ErrorResponse> handleMissingHeader(MissingRequestHeaderException exception) {
-        return errorResponse(CommonError.MISSING_HEADER);
+        return errorResponse(RequestError.MISSING_HEADER);
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ErrorResponse> handleInvalidParameterType(MethodArgumentTypeMismatchException exception) {
-        return errorResponse(CommonError.INVALID_PARAMETER_TYPE);
+        return errorResponse(RequestError.INVALID_PARAMETER_TYPE);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorResponse> handleInvalidRequestBody(HttpMessageNotReadableException exception) {
-        return errorResponse(CommonError.INVALID_REQUEST_BODY);
+        return errorResponse(RequestError.INVALID_REQUEST_BODY);
     }
 
     @ExceptionHandler(HandlerMethodValidationException.class)
@@ -49,7 +49,7 @@ public class WebExceptionHandler {
             log.error("Controller return value validation failed", exception);
             return errorResponse(CommonError.INTERNAL_SERVER_ERROR);
         }
-        return errorResponse(CommonError.VALIDATION_FAILED);
+        return errorResponse(RequestError.VALIDATION_FAILED);
     }
 
     private ResponseEntity<ErrorResponse> errorResponse(ErrorCode error) {
