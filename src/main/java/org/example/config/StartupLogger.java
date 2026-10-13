@@ -1,7 +1,6 @@
 package org.example.config;
 
 import jakarta.servlet.ServletContext;
-import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -34,27 +33,29 @@ public class StartupLogger {
 
     private void logProfiles(Environment environment) {
         String[] activeProfiles = environment.getActiveProfiles();
-        if (activeProfiles.length > 0) {
-            log.info("Active profiles: {}", String.join(",", activeProfiles));
-        } else {
-            log.info("Active profiles: none; default profiles: {}",
-                    String.join(",", environment.getDefaultProfiles()));
-        }
+        String profiles = activeProfiles.length > 0
+                ? String.join(",", activeProfiles)
+                : "none; default profiles: " + String.join(",", environment.getDefaultProfiles());
+        log.info("Active profiles: {}", profiles);
     }
 
     private void logSwaggerUrl(Environment environment) {
-        if (Boolean.TRUE.equals(environment.getProperty("springdoc.swagger-ui.enabled", Boolean.class, false))
-                && Boolean.TRUE.equals(environment.getProperty("springdoc.api-docs.enabled", Boolean.class, false))
+        if (environment.getProperty("springdoc.swagger-ui.enabled", Boolean.class, false)
+                && environment.getProperty("springdoc.api-docs.enabled", Boolean.class, false)
                 && applicationContext instanceof ServletWebServerApplicationContext webContext) {
-            String scheme = Boolean.TRUE.equals(environment.getProperty("server.ssl.enabled", Boolean.class, false))
+            String scheme = environment.getProperty("server.ssl.enabled", Boolean.class, false)
                     ? "https" : "http";
-            int port = webContext.getWebServer().getPort();
-            @Nullable ServletContext servletContext = webContext.getServletContext();
+            var webServer = webContext.getWebServer();
+            if (webServer == null) {
+                return;
+            }
+            int port = webServer.getPort();
+            ServletContext servletContext = webContext.getServletContext();
             if (servletContext == null) {
                 return;
             }
             String contextPath = servletContext.getContextPath();
-            @Nullable String configuredPath = environment.getProperty("springdoc.swagger-ui.path");
+            String configuredPath = environment.getProperty("springdoc.swagger-ui.path");
             String swaggerPath = configuredPath != null ? configuredPath : "/swagger-ui.html";
             log.info("Swagger UI: {}://localhost:{}{}{}", scheme, port, contextPath, swaggerPath);
         }

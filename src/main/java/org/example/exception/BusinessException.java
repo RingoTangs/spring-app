@@ -2,10 +2,12 @@ package org.example.exception;
 
 import org.springframework.http.HttpStatus;
 
+import java.io.Serial;
 import java.util.Objects;
 
 public class BusinessException extends RuntimeException {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     private final String code;

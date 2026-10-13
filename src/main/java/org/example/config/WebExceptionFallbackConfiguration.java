@@ -32,11 +32,12 @@ public class WebExceptionFallbackConfiguration implements WebMvcConfigurer {
 
     @Override
     public void extendHandlerExceptionResolvers(List<HandlerExceptionResolver> resolvers) {
-        resolvers.add(this::resolveUnexpectedException);
+        resolvers.add((request, response, ignoredHandler, exception) ->
+                resolveUnexpectedException(request, response, exception));
     }
 
     private @Nullable ModelAndView resolveUnexpectedException(HttpServletRequest request,
-            HttpServletResponse response, @Nullable Object handler, Exception exception) {
+            HttpServletResponse response, Exception exception) {
         log.error("Unhandled exception during {} {}", request.getMethod(), request.getRequestURI(), exception);
         if (response.isCommitted()) {
             return null;
