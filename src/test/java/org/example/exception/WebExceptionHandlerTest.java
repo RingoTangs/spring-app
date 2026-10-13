@@ -1,5 +1,6 @@
 package org.example.exception;
 
+import org.example.config.WebExceptionFallbackConfiguration;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -14,11 +15,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(WebExceptionHandlerTest.TestController.class)
-@Import({WebExceptionHandler.class, WebExceptionHandlerTest.TestController.class})
+@Import({WebExceptionHandler.class, WebExceptionFallbackConfiguration.class,
+        WebExceptionHandlerTest.TestController.class})
 class WebExceptionHandlerTest {
 
     @Autowired
@@ -57,5 +60,44 @@ class WebExceptionHandlerTest {
         String plainTextError() {
             throw new BusinessException("USER_NOT_FOUND", "用户不存在", HttpStatus.NOT_FOUND);
         }
+
+        @GetMapping("/test/unexpected-error")
+        String unexpectedError() {
+            throw new IllegalStateException("internal-secret-details");
+        }
+
+        @GetMapping(value = "/test/plain-text-unexpected-error", produces = MediaType.TEXT_PLAIN_VALUE)
+        String plainTextUnexpectedError() {
+            throw new IllegalStateException("internal-secret-details");
+        }
+    }
+
+    @Test
+    void unexpectedErrorReturnsSafeJson() throws Exception {
+        mockMvc.perform(get("/test/unexpected-error"))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(content().json("""
+                        {"code":"INTERNAL_SERVER_ERROR","message":"服务器内部错误"}
+                        """, org.springframework.test.json.JsonCompareMode.STRICT));
+    }
+
+    @Test
+    void unexpectedPlainTextErrorReturnsJson() throws Exception {
+        mockMvc.perform(get("/test/plain-text-unexpected-error").accept(MediaType.TEXT_PLAIN))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(content().json("""
+                        {"code":"INTERNAL_SERVER_ERROR","message":"服务器内部错误"}
+                        """, org.springframework.test.json.JsonCompareMode.STRICT));
+    }
+
+    @Test
+    void frameworkErrorsKeepTheirHttpStatus() throws Exception {
+        mockMvc.perform(get("/test/business-error")).andExpect(status().isBadRequest());
+        mockMvc.perform(get("/test/business-error").param("status", "invalid"))
+                .andExpect(status().isBadRequest());
+        mockMvc.perform(get("/test/missing")).andExpect(status().isNotFound());
+        mockMvc.perform(post("/test/business-error")).andExpect(status().isMethodNotAllowed());
     }
 }
