@@ -13,7 +13,7 @@ Use JDK 21 and an installed Maven; this repository has no Maven Wrapper.
 - `mvn spring-boot:run -Dspring-boot.run.profiles=dev`: run locally with Swagger enabled.
 - `java -jar target/spring-app-0.0.1-SNAPSHOT.jar --spring.profiles.active=dev`: run the packaged application.
 
-The default port is 8080. `GET /hello` returns plain text `Hello World!`.
+The default port is 8080. `GET /examples/success` returns JSON containing the message `Hello World!`.
 
 ## Coding Style & Naming Conventions
 

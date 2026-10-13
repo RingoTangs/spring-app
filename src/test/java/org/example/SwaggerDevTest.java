@@ -20,14 +20,6 @@ class SwaggerDevTest {
     private MockMvc mockMvc;
 
     @Test
-    void documentsHelloEndpoint() throws Exception {
-        mockMvc.perform(get("/v3/api-docs"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.paths['/hello'].get").exists());
-    }
-
-    @Test
     void documentsExampleResponses() throws Exception {
         mockMvc.perform(get("/v3/api-docs"))
                 .andExpect(status().isOk())
