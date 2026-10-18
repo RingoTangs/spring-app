@@ -47,11 +47,7 @@ public class WebExceptionFallbackConfiguration implements WebMvcConfigurer {
 
     private @Nullable ModelAndView resolveUnexpectedException(
             HttpServletRequest request, HttpServletResponse response, Exception exception) {
-        log.error(
-                "Unhandled exception during {} {}",
-                request.getMethod(),
-                request.getRequestURI(),
-                exception);
+        log.error("Unhandled exception during HTTP request", exception);
         if (response.isCommitted()) {
             return null;
         }

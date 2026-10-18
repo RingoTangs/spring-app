@@ -1,14 +1,21 @@
 package org.example.exception;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
+
 import org.example.config.WebExceptionFallbackConfiguration;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -122,7 +129,7 @@ class WebExceptionHandlerTest {
             throw BusinessException.of(TestError.USER_NOT_FOUND, "alice");
         }
 
-        @GetMapping("/test/unexpected-error")
+        @GetMapping({"/test/unexpected-error", "/test/unexpected-error/{ignored}"})
         String unexpectedError() {
             throw new IllegalStateException("internal-secret-details");
         }
@@ -283,6 +290,63 @@ class WebExceptionHandlerTest {
                     "/test/common-error", "de-DE", 404, "COMMON_NOT_FOUND", "Resource not found");
         } finally {
             java.util.Locale.setDefault(previous);
+        }
+    }
+
+    @Test
+    void unexpectedErrorLogsThrowableWithoutRawRequestContext() throws Exception {
+        Logger logger = (Logger) LoggerFactory.getLogger(WebExceptionFallbackConfiguration.class);
+        ListAppender<ILoggingEvent> appender = new ListAppender<>();
+        appender.start();
+        logger.addAppender(appender);
+        try {
+            mockMvc.perform(
+                            get("/test/unexpected-error/private-uri-marker")
+                                    .queryParam("token", "private-query-marker")
+                                    .header("Authorization", "Bearer private-header-marker"))
+                    .andExpect(status().isInternalServerError())
+                    .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                    .andExpect(
+                            content()
+                                    .json(
+                                            "{\"code\":\"COMMON_INTERNAL_SERVER_ERROR\",\"message\":\"Internal server error\"}",
+                                            org.springframework.test.json.JsonCompareMode.STRICT));
+            assertEquals(1, appender.list.size());
+            ILoggingEvent event = appender.list.getFirst();
+            assertEquals(Level.ERROR, event.getLevel());
+            assertEquals("Unhandled exception during HTTP request", event.getFormattedMessage());
+            assertTrue(event.getArgumentArray() == null || event.getArgumentArray().length == 0);
+            var throwable = event.getThrowableProxy();
+            assertNotNull(throwable);
+            assertEquals(IllegalStateException.class.getName(), throwable.getClassName());
+            assertEquals("internal-secret-details", throwable.getMessage());
+            assertTrue(throwable.getStackTraceElementProxyArray().length > 0);
+        } finally {
+            logger.detachAppender(appender);
+            appender.stop();
+        }
+    }
+
+    @Test
+    void expectedBusinessAndRequestErrorsDoNotLogErrorStacks() throws Exception {
+        Logger handler = (Logger) LoggerFactory.getLogger(WebExceptionHandler.class);
+        Logger fallback = (Logger) LoggerFactory.getLogger(WebExceptionFallbackConfiguration.class);
+        ListAppender<ILoggingEvent> appender = new ListAppender<>();
+        appender.start();
+        handler.addAppender(appender);
+        fallback.addAppender(appender);
+        try {
+            mockMvc.perform(get("/test/common-error")).andExpect(status().isNotFound());
+            mockMvc.perform(get("/test/business-error")).andExpect(status().isBadRequest());
+            mockMvc.perform(get("/test/business-error").param("status", "invalid"))
+                    .andExpect(status().isBadRequest());
+            assertTrue(
+                    appender.list.stream()
+                            .noneMatch(event -> event.getLevel().isGreaterOrEqual(Level.ERROR)));
+        } finally {
+            handler.detachAppender(appender);
+            fallback.detachAppender(appender);
+            appender.stop();
         }
     }
 

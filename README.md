@@ -38,6 +38,18 @@ CI 在推送到 `main`、创建或更新以 `main` 为目标的 Pull Request，�
 在仓库的 **Actions → CI** 页面查看执行结果，进入 **Build and Test** 查看各步骤日志。
 工作流进入默认分支后，可通过 **Run workflow** 手动触发。无需配置额外 Secrets。
 
+## 日志策略
+
+使用 Spring Boot 默认的 SLF4J + Logback。默认及 dev 环境输出文本控制台日志，prod 环境输出 Logstash 风格的 JSON 控制台日志。项目默认不创建日志文件；Docker 部署时推荐通过 stdout/stderr 交由外部日志平台采集。
+
+```sh
+SPRING_PROFILES_ACTIVE=prod ./mvnw spring-boot:run
+```
+
+未知系统异常在处理边界记录 ERROR 和完整堆栈；预期业务异常、请求参数错误默认不打印 ERROR 堆栈，普通 400/404 不自动视为系统故障。系统异常详情不会暴露给 API 客户端。
+
+禁止主动记录密码、Token、认证头、Cookie/Session 凭据、API Key、私钥等敏感信息，也不要整体输出未经审查的请求/响应对象。完整 Throwable 的 message 和堆栈仍可能包含敏感内容：内部异常不要嵌入秘密，第三方异常按风险选择原始 Throwable 或受控摘要与异常类型。详细级别和敏感信息规范见 AGENTS.md。
+
 ## 错误响应国际化
 
 错误响应保持 `{ "code": "...", "message": "..." }`，HTTP 状态由 `ErrorCode` 定义。

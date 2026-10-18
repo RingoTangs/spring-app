@@ -34,3 +34,19 @@ History uses descriptive imperative subjects such as “Add SpringDoc configurat
 ## Configuration Tips
 
 Swagger is disabled by default and enabled explicitly through the `dev` profile at `/swagger-ui.html`. Do not activate `dev` for production deployments. Keep credentials out of committed YAML; supply them through external configuration or environment variables.
+
+## Logging Guidelines
+
+Use SLF4J with Boot's default Logback. Default and dev profiles use text console logs; prod uses native Logstash JSON console logs. Do not add file logging by default.
+
+- ERROR: unexpected system exceptions, unrecoverable failures, and program defects requiring investigation.
+- WARN: recoverable abnormal conditions, such as external-service retries or unusual system states.
+- INFO: important application lifecycle and business events, such as startup or completion of significant tasks.
+- DEBUG: development troubleshooting without sensitive data.
+- TRACE: very fine-grained diagnostics; disabled by default.
+
+Expected `BusinessException` and framework errors mapped to `RequestError` must not log ERROR stacks by default. Ordinary 400/404 responses are not automatically system failures. Unexpected system exceptions returning 500 must log ERROR with a stack trace. Controller return-value validation failures are system errors. Record a full stack once at the designated handling boundary; do not repeat the same exception across Controller, Service, and global handlers.
+
+Use SLF4J parameterized logging, for example `log.info("User created: userId={}", userId)`. Do not actively log passwords, access/refresh tokens, Authorization headers, Cookie/Session credentials, API keys, private keys, other secrets, sensitive request/response data, or unreviewed sensitive business fields. Do not serialize entire unreviewed request objects or directly log raw request URIs/query strings in global exception logs.
+
+Full Throwables can still contain sensitive information in their messages and stacks: removing a URI from the log context does not guarantee secret-free logs. Keep secrets out of internally controlled exception messages. Assess third-party exceptions before logging their original Throwable; where necessary, log a controlled summary and exception type. Do not blanket-suppress system exception stacks or introduce a global regex masking framework, new logging service abstraction, or logging-specific exception hierarchy.
