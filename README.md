@@ -1,12 +1,31 @@
 # Spring App
 
-Java 21 / Spring Boot Web 示例，使用 Maven 构建。运行与验证：
+Java 21 / Spring Boot Web 示例，推荐使用项目提供的 Maven Wrapper 构建。
+
+## 开发环境要求
+
+- 必须安装 JDK 21，不限制 JDK 供应商或补丁版本。
+- 项目支持 Maven 3.9.x，Maven Enforcer 在 `validate` 阶段检查 Java 与 Maven 版本，不满足要求时构建失败。
+- 推荐使用 Maven Wrapper，固定运行 Maven 3.9.15，无需预先安装 Maven。
+- Wrapper 不负责安装 JDK；首次使用需要联网下载 Maven，下载内容缓存在用户目录，不提交到仓库。
+- 不限制操作系统，源码、资源及报告编码统一为 UTF-8。
+
+检查环境：
 
 ```sh
-mvn spring-boot:run -Dspring-boot.run.profiles=dev
-mvn spotless:apply
-mvn clean verify
+java -version
+./mvnw -version
 ```
+
+标准构建、格式化与运行：
+
+```sh
+./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+./mvnw spotless:apply
+./mvnw clean verify
+```
+
+Windows 用户将 `./mvnw` 替换为 `mvnw.cmd`（PowerShell 使用 `.\mvnw.cmd`），例如 `mvnw.cmd clean verify`。
 
 Swagger 仅在 `dev` profile 启用，地址为 `/swagger-ui.html`。
 
