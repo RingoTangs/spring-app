@@ -29,6 +29,15 @@ Windows 用户将 `./mvnw` 替换为 `mvnw.cmd`（PowerShell 使用 `.\mvnw.cmd`
 
 Swagger 仅在 `dev` profile 启用，地址为 `/swagger-ui.html`。
 
+## 持续集成（CI）
+
+CI 在推送到 `main`、创建或更新以 `main` 为目标的 Pull Request，以及手动触发时运行。
+工作流使用 GitHub 托管的 Ubuntu Runner、Temurin JDK 21 和 Maven Wrapper 3.9.15，并启用 Maven 依赖缓存。
+核心验证命令为 `./mvnw clean verify`（CI 附加 `--batch-mode --no-transfer-progress`），自动执行环境检查、编译、测试、Spring Boot 打包和 Spotless 格式检查；任一步骤失败都会使构建失败。
+
+在仓库的 **Actions → CI** 页面查看执行结果，进入 **Build and Test** 查看各步骤日志。
+工作流进入默认分支后，可通过 **Run workflow** 手动触发。无需配置额外 Secrets。
+
 ## 错误响应国际化
 
 错误响应保持 `{ "code": "...", "message": "..." }`，HTTP 状态由 `ErrorCode` 定义。

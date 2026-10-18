@@ -27,6 +27,8 @@ Use JUnit Jupiter, Spring Boot Test, and MockMvc. Name test classes `*Test` and 
 
 ## Commit & Pull Request Guidelines
 
+Run `./mvnw clean verify` locally before committing code or creating a pull request.
+
 History uses descriptive imperative subjects such as “Add SpringDoc configuration and tests” and “Refactor logging to StartupLogger class.” Follow that style and keep commits focused. Pull requests should explain the change, relevant configuration effects, and validation results; link related issues when applicable. Include response examples for API changes.
 
 ## Configuration Tips
