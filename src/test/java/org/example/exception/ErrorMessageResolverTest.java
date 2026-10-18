@@ -49,7 +49,7 @@ class ErrorMessageResolverTest {
                     }
 
                     public String getMessageKey() {
-                        return "test.user_not_found";
+                        return "error.test.user_not_found";
                     }
                 };
         BusinessException exception = BusinessException.of(error, "alice");
@@ -70,8 +70,8 @@ class ErrorMessageResolverTest {
         assertEquals(
                 new ErrorResponse("NOT_FOUND", "Internal server error"),
                 resolver.resolve(CommonError.NOT_FOUND, Locale.US, "secret"));
-        source.addMessage("common.not_found", Locale.US, "invalid {template");
-        source.addMessage("common.internal_server_error", Locale.US, "invalid {fallback");
+        source.addMessage("error.common.not_found", Locale.US, "invalid {template");
+        source.addMessage("error.common.internal_server_error", Locale.US, "invalid {fallback");
         assertEquals(
                 "Internal server error",
                 resolver.resolve(CommonError.NOT_FOUND, Locale.US, "secret").message());

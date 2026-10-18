@@ -13,7 +13,9 @@ Swagger 仅在 `dev` profile 启用，地址为 `/swagger-ui.html`。
 ## 错误响应国际化
 
 错误响应保持 `{ "code": "...", "message": "..." }`，HTTP 状态由 `ErrorCode` 定义。
-`code` 是稳定的 API 标识，`messageKey` 是翻译资源 Key，两者独立。
+`code` 是稳定的 API 错误标识，`messageKey` 是内部国际化资源标识，两者独立。
+所有 ErrorCode 的 messageKey 统一采用 `error.<module>.<error_name>`，例如 `error.common.not_found`、`error.request.validation_failed`。
+对外的 code 保持 `NOT_FOUND`、`VALIDATION_FAILED` 等原值，不要求添加 `error.` 前缀。
 `ErrorCode` 实现 `getCode()`、`getStatus()`、`getMessageKey()`。
 
 `Accept-Language` 选择中文或英文，支持 `zh-CN`、`en-US` 等地区语言；未提供请求头或没有匹配的翻译资源时使用英文，不依赖服务器默认 Locale。
@@ -28,7 +30,7 @@ curl -H 'Accept-Language: en-US' http://localhost:8080/examples/business-error
 ```
 
 抛出业务异常时使用 `BusinessException.of(CommonError.NOT_FOUND)`。
-动态消息使用 `BusinessException.of(error, "alice")`，对应资源模板例如中文 `用户 {0} 不存在`、英文 `User {0} not found`。
+动态消息使用 `BusinessException.of(error, "alice")`，对应资源 Key 例如 `error.test.user_not_found`，模板例如中文 `用户 {0} 不存在`、英文 `User {0} not found`。
 参数数组会进行防御性复制；参数对象本身不做深拷贝，应使用字符串、数字等不可变值。
 业务异常不解析请求语言，`getMessage()` 仅提供诊断用 Key；最终文案在 HTTP 异常响应边界生成。
 

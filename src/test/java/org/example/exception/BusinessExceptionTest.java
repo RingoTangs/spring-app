@@ -25,7 +25,7 @@ class BusinessExceptionTest {
         assertSame(CommonError.NOT_FOUND, exception.getError());
         assertEquals(CommonError.NOT_FOUND.getCode(), exception.getCode());
         assertEquals(CommonError.NOT_FOUND.getStatus(), exception.getStatus());
-        assertEquals("common.not_found", exception.getMessage());
+        assertEquals("error.common.not_found", exception.getMessage());
         assertEquals(0, BusinessException.of(CommonError.NOT_FOUND).getArgs().length);
         assertEquals("alice", BusinessException.of(CommonError.NOT_FOUND, "alice").getArgs()[0]);
     }

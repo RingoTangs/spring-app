@@ -84,7 +84,7 @@ class WebExceptionHandlerTest {
                         }
 
                         public String getMessageKey() {
-                            return "missing.secret.key";
+                            return "error.test.missing_translation";
                         }
                     });
         }
@@ -112,7 +112,7 @@ class WebExceptionHandlerTest {
                         }
 
                         public String getMessageKey() {
-                            return "test.business_error";
+                            return "error.test.business_error";
                         }
                     });
         }
@@ -296,7 +296,7 @@ class WebExceptionHandlerTest {
 
         @Override
         public String getMessageKey() {
-            return "test.user_not_found";
+            return "error.test.user_not_found";
         }
     }
 }
