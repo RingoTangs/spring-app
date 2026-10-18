@@ -33,12 +33,16 @@ class ValidationTest {
     void validInputsReturnJson() throws Exception {
         mockMvc.perform(
                         post("/examples/validation/body")
+                                .header("Accept-Language", "zh-CN")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{\"name\":\"Alice\",\"age\":18}"))
                 .andExpect(status().isOk())
                 .andExpect(
                         content().json("{\"name\":\"Alice\",\"age\":18}", JsonCompareMode.STRICT));
-        mockMvc.perform(get("/examples/validation/query").param("age", "18"))
+        mockMvc.perform(
+                        get("/examples/validation/query")
+                                .header("Accept-Language", "zh-CN")
+                                .param("age", "18"))
                 .andExpect(status().isOk())
                 .andExpect(content().json("{\"age\":18}", JsonCompareMode.STRICT));
     }
@@ -57,6 +61,7 @@ class ValidationTest {
         assertBadRequest(
                 mockMvc.perform(
                         post("/examples/validation/body")
+                                .header("Accept-Language", "zh-CN")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(body)),
                 "VALIDATION_FAILED",
@@ -67,7 +72,10 @@ class ValidationTest {
     @ValueSource(strings = {"0", "-1"})
     void queryConstraintFailuresReturnValidationCode(String age) throws Exception {
         assertBadRequest(
-                mockMvc.perform(get("/examples/validation/query").param("age", age)),
+                mockMvc.perform(
+                        get("/examples/validation/query")
+                                .header("Accept-Language", "zh-CN")
+                                .param("age", age)),
                 "VALIDATION_FAILED",
                 "请求参数校验失败");
     }
@@ -75,16 +83,19 @@ class ValidationTest {
     @Test
     void missingParameterAndHeaderReturnFixedError() throws Exception {
         assertBadRequest(
-                mockMvc.perform(get("/examples/validation/query")),
+                mockMvc.perform(
+                        get("/examples/validation/query").header("Accept-Language", "zh-CN")),
                 "MISSING_PARAMETER",
                 "缺少必填请求参数");
         assertBadRequest(
-                mockMvc.perform(get("/test/validation/header")), "MISSING_HEADER", "缺少必填请求头");
+                mockMvc.perform(get("/test/validation/header").header("Accept-Language", "zh-CN")),
+                "MISSING_HEADER",
+                "缺少必填请求头");
     }
 
     @Test
     void invalidReturnValueIsServerError() throws Exception {
-        mockMvc.perform(get("/test/validation/return"))
+        mockMvc.perform(get("/test/validation/return").header("Accept-Language", "zh-CN"))
                 .andExpect(status().isInternalServerError())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(
@@ -102,6 +113,7 @@ class ValidationTest {
         assertBadRequest(
                 mockMvc.perform(
                         post("/examples/validation/body")
+                                .header("Accept-Language", "zh-CN")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(body)),
                 "INVALID_REQUEST_BODY",
@@ -111,7 +123,10 @@ class ValidationTest {
     @Test
     void invalidQueryTypeReturnsTypeErrorCode() throws Exception {
         assertBadRequest(
-                mockMvc.perform(get("/examples/validation/query").param("age", "invalid")),
+                mockMvc.perform(
+                        get("/examples/validation/query")
+                                .header("Accept-Language", "zh-CN")
+                                .param("age", "invalid")),
                 "INVALID_PARAMETER_TYPE",
                 "请求参数类型错误");
     }

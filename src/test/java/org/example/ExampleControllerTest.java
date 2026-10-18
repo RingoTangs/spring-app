@@ -41,7 +41,7 @@ class ExampleControllerTest {
                         content()
                                 .json(
                                         """
-                        {"code":"NOT_FOUND","message":"资源不存在"}
+                        {"code":"NOT_FOUND","message":"Resource not found"}
                         """,
                                         JsonCompareMode.STRICT));
     }
@@ -55,7 +55,7 @@ class ExampleControllerTest {
                         content()
                                 .json(
                                         """
-                        {"code":"INTERNAL_SERVER_ERROR","message":"服务器内部错误"}
+                        {"code":"INTERNAL_SERVER_ERROR","message":"Internal server error"}
                         """,
                                         JsonCompareMode.STRICT));
     }

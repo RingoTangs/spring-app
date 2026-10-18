@@ -5,7 +5,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import org.example.config.ErrorI18nConfiguration;
 import org.example.config.WebExceptionFallbackConfiguration;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -26,7 +25,6 @@ import org.springframework.web.bind.annotation.RestController;
 @Import({
     WebExceptionHandler.class,
     ErrorMessageResolver.class,
-    ErrorI18nConfiguration.class,
     WebExceptionFallbackConfiguration.class,
     WebExceptionHandlerTest.TestController.class
 })
@@ -46,7 +44,7 @@ class WebExceptionHandlerTest {
                         content()
                                 .json(
                                         """
-                        {"code":"BUSINESS_ERROR","message":"业务操作失败"}
+                        {"code":"BUSINESS_ERROR","message":"Business operation failed"}
                         """,
                                         org.springframework.test.json.JsonCompareMode.STRICT));
     }
@@ -60,7 +58,7 @@ class WebExceptionHandlerTest {
                         content()
                                 .json(
                                         """
-                        {"code":"USER_NOT_FOUND","message":"用户 alice 不存在"}
+                        {"code":"USER_NOT_FOUND","message":"User alice not found"}
                         """,
                                         org.springframework.test.json.JsonCompareMode.STRICT));
     }
@@ -146,7 +144,7 @@ class WebExceptionHandlerTest {
                         content()
                                 .json(
                                         """
-                        {"code":"INTERNAL_SERVER_ERROR","message":"服务器内部错误"}
+                        {"code":"INTERNAL_SERVER_ERROR","message":"Internal server error"}
                         """,
                                         org.springframework.test.json.JsonCompareMode.STRICT));
     }
@@ -160,7 +158,7 @@ class WebExceptionHandlerTest {
                         content()
                                 .json(
                                         """
-                        {"code":"INTERNAL_SERVER_ERROR","message":"服务器内部错误"}
+                        {"code":"INTERNAL_SERVER_ERROR","message":"Internal server error"}
                         """,
                                         org.springframework.test.json.JsonCompareMode.STRICT));
     }
@@ -183,7 +181,7 @@ class WebExceptionHandlerTest {
                         content()
                                 .json(
                                         """
-                        {"code":"NOT_FOUND","message":"资源不存在"}
+                        {"code":"NOT_FOUND","message":"Resource not found"}
                         """,
                                         org.springframework.test.json.JsonCompareMode.STRICT));
     }
@@ -197,7 +195,7 @@ class WebExceptionHandlerTest {
                         content()
                                 .json(
                                         """
-                        {"code":"USER_NOT_FOUND","message":"用户 alice 不存在"}
+                        {"code":"USER_NOT_FOUND","message":"User alice not found"}
                         """,
                                         org.springframework.test.json.JsonCompareMode.STRICT));
     }
@@ -211,7 +209,7 @@ class WebExceptionHandlerTest {
                         content()
                                 .json(
                                         """
-                        {"code":"USER_NOT_FOUND","message":"用户 alice 不存在"}
+                        {"code":"USER_NOT_FOUND","message":"User alice not found"}
                         """,
                                         org.springframework.test.json.JsonCompareMode.STRICT));
     }
@@ -220,7 +218,7 @@ class WebExceptionHandlerTest {
     @org.junit.jupiter.params.provider.CsvSource({
         "zh-CN,资源不存在,服务器内部错误,用户 alice 不存在",
         "en-US,Resource not found,Internal server error,User alice not found",
-        "fr-FR,资源不存在,服务器内部错误,用户 alice 不存在"
+        "fr-FR,Resource not found,Internal server error,User alice not found"
     })
     void localizesBusinessAndFallbackResponses(
             String language, String notFound, String serverError, String dynamic) throws Exception {
@@ -270,11 +268,14 @@ class WebExceptionHandlerTest {
     void defaultLanguageDoesNotDependOnSystemLocale() throws Exception {
         java.util.Locale previous = java.util.Locale.getDefault();
         try {
-            java.util.Locale.setDefault(java.util.Locale.ENGLISH);
+            java.util.Locale.setDefault(java.util.Locale.SIMPLIFIED_CHINESE);
             mockMvc.perform(get("/test/common-error"))
                     .andExpect(status().isNotFound())
-                    .andExpect(content().json("{\"code\":\"NOT_FOUND\",\"message\":\"资源不存在\"}"));
-            assertLocalized("/test/common-error", "de-DE", 404, "NOT_FOUND", "资源不存在");
+                    .andExpect(
+                            content()
+                                    .json(
+                                            "{\"code\":\"NOT_FOUND\",\"message\":\"Resource not found\"}"));
+            assertLocalized("/test/common-error", "de-DE", 404, "NOT_FOUND", "Resource not found");
         } finally {
             java.util.Locale.setDefault(previous);
         }

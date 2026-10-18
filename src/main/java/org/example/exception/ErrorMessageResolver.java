@@ -29,7 +29,7 @@ public class ErrorMessageResolver {
             return messageSource.getMessage(
                     CommonError.INTERNAL_SERVER_ERROR.getMessageKey(), null, locale);
         } catch (NoSuchMessageException | IllegalArgumentException exception) {
-            return "服务器内部错误";
+            return "Internal server error";
         }
     }
 }

@@ -12,7 +12,7 @@ import java.util.stream.Stream;
 class ErrorMessageResolverTest {
     @Test
     void allProductionErrorsHaveExplicitTranslationsInBothBundles() throws Exception {
-        for (String name : new String[] {"messages.properties", "messages_en.properties"}) {
+        for (String name : new String[] {"messages.properties", "messages_zh.properties"}) {
             java.util.Properties properties = new java.util.Properties();
             try (var stream = getClass().getClassLoader().getResourceAsStream(name)) {
                 assertNotNull(stream);
@@ -68,11 +68,12 @@ class ErrorMessageResolverTest {
         source.setAlwaysUseMessageFormat(true);
         ErrorMessageResolver resolver = new ErrorMessageResolver(source);
         assertEquals(
-                new ErrorResponse("NOT_FOUND", "服务器内部错误"),
+                new ErrorResponse("NOT_FOUND", "Internal server error"),
                 resolver.resolve(CommonError.NOT_FOUND, Locale.US, "secret"));
         source.addMessage("common.not_found", Locale.US, "invalid {template");
         source.addMessage("common.internal_server_error", Locale.US, "invalid {fallback");
         assertEquals(
-                "服务器内部错误", resolver.resolve(CommonError.NOT_FOUND, Locale.US, "secret").message());
+                "Internal server error",
+                resolver.resolve(CommonError.NOT_FOUND, Locale.US, "secret").message());
     }
 }
