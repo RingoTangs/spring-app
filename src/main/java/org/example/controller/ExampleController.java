@@ -77,7 +77,7 @@ public class ExampleController {
                             schema = @Schema(implementation = ValidationRequest.class)))
     @ApiResponse(
             responseCode = "400",
-            description = "请求参数错误：VALIDATION_FAILED、INVALID_REQUEST_BODY",
+            description = "请求参数错误：REQUEST_VALIDATION_FAILED、REQUEST_INVALID_REQUEST_BODY",
             content =
                     @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
@@ -97,7 +97,8 @@ public class ExampleController {
                             schema = @Schema(implementation = AgeResponse.class)))
     @ApiResponse(
             responseCode = "400",
-            description = "请求参数错误：VALIDATION_FAILED、MISSING_PARAMETER、INVALID_PARAMETER_TYPE",
+            description =
+                    "请求参数错误：REQUEST_VALIDATION_FAILED、REQUEST_MISSING_PARAMETER、REQUEST_INVALID_PARAMETER_TYPE",
             content =
                     @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,

@@ -64,7 +64,7 @@ class ValidationTest {
                                 .header("Accept-Language", "zh-CN")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(body)),
-                "VALIDATION_FAILED",
+                "REQUEST_VALIDATION_FAILED",
                 "请求参数校验失败");
     }
 
@@ -76,7 +76,7 @@ class ValidationTest {
                         get("/examples/validation/query")
                                 .header("Accept-Language", "zh-CN")
                                 .param("age", age)),
-                "VALIDATION_FAILED",
+                "REQUEST_VALIDATION_FAILED",
                 "请求参数校验失败");
     }
 
@@ -85,11 +85,11 @@ class ValidationTest {
         assertBadRequest(
                 mockMvc.perform(
                         get("/examples/validation/query").header("Accept-Language", "zh-CN")),
-                "MISSING_PARAMETER",
+                "REQUEST_MISSING_PARAMETER",
                 "缺少必填请求参数");
         assertBadRequest(
                 mockMvc.perform(get("/test/validation/header").header("Accept-Language", "zh-CN")),
-                "MISSING_HEADER",
+                "REQUEST_MISSING_HEADER",
                 "缺少必填请求头");
     }
 
@@ -102,7 +102,7 @@ class ValidationTest {
                         content()
                                 .json(
                                         """
-                        {"code":"INTERNAL_SERVER_ERROR","message":"服务器内部错误"}
+                        {"code":"COMMON_INTERNAL_SERVER_ERROR","message":"服务器内部错误"}
                         """,
                                         JsonCompareMode.STRICT));
     }
@@ -116,7 +116,7 @@ class ValidationTest {
                                 .header("Accept-Language", "zh-CN")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(body)),
-                "INVALID_REQUEST_BODY",
+                "REQUEST_INVALID_REQUEST_BODY",
                 "请求体缺失或格式错误");
     }
 
@@ -127,7 +127,7 @@ class ValidationTest {
                         get("/examples/validation/query")
                                 .header("Accept-Language", "zh-CN")
                                 .param("age", "invalid")),
-                "INVALID_PARAMETER_TYPE",
+                "REQUEST_INVALID_PARAMETER_TYPE",
                 "请求参数类型错误");
     }
 
@@ -139,30 +139,30 @@ class ValidationTest {
                                 .header("Accept-Language", "en-US")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{}")),
-                "VALIDATION_FAILED",
+                "REQUEST_VALIDATION_FAILED",
                 "Request validation failed");
         assertBadRequest(
                 mockMvc.perform(
                         get("/examples/validation/query")
                                 .header("Accept-Language", "en-US")
                                 .param("age", "0")),
-                "VALIDATION_FAILED",
+                "REQUEST_VALIDATION_FAILED",
                 "Request validation failed");
         assertBadRequest(
                 mockMvc.perform(
                         get("/examples/validation/query").header("Accept-Language", "en-US")),
-                "MISSING_PARAMETER",
+                "REQUEST_MISSING_PARAMETER",
                 "Required request parameter is missing");
         assertBadRequest(
                 mockMvc.perform(get("/test/validation/header").header("Accept-Language", "en-US")),
-                "MISSING_HEADER",
+                "REQUEST_MISSING_HEADER",
                 "Required request header is missing");
         assertBadRequest(
                 mockMvc.perform(
                         get("/examples/validation/query")
                                 .header("Accept-Language", "en-US")
                                 .param("age", "invalid")),
-                "INVALID_PARAMETER_TYPE",
+                "REQUEST_INVALID_PARAMETER_TYPE",
                 "Invalid request parameter type");
         assertBadRequest(
                 mockMvc.perform(
@@ -170,7 +170,7 @@ class ValidationTest {
                                 .header("Accept-Language", "en-US")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{")),
-                "INVALID_REQUEST_BODY",
+                "REQUEST_INVALID_REQUEST_BODY",
                 "Request body is missing or malformed");
         mockMvc.perform(get("/test/validation/return").header("Accept-Language", "en-US"))
                 .andExpect(status().isInternalServerError())
@@ -178,7 +178,7 @@ class ValidationTest {
                 .andExpect(
                         content()
                                 .json(
-                                        "{\"code\":\"INTERNAL_SERVER_ERROR\",\"message\":\"Internal server error\"}",
+                                        "{\"code\":\"COMMON_INTERNAL_SERVER_ERROR\",\"message\":\"Internal server error\"}",
                                         JsonCompareMode.STRICT));
     }
 

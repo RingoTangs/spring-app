@@ -144,7 +144,7 @@ class WebExceptionHandlerTest {
                         content()
                                 .json(
                                         """
-                        {"code":"INTERNAL_SERVER_ERROR","message":"Internal server error"}
+                        {"code":"COMMON_INTERNAL_SERVER_ERROR","message":"Internal server error"}
                         """,
                                         org.springframework.test.json.JsonCompareMode.STRICT));
     }
@@ -158,7 +158,7 @@ class WebExceptionHandlerTest {
                         content()
                                 .json(
                                         """
-                        {"code":"INTERNAL_SERVER_ERROR","message":"Internal server error"}
+                        {"code":"COMMON_INTERNAL_SERVER_ERROR","message":"Internal server error"}
                         """,
                                         org.springframework.test.json.JsonCompareMode.STRICT));
     }
@@ -181,7 +181,7 @@ class WebExceptionHandlerTest {
                         content()
                                 .json(
                                         """
-                        {"code":"NOT_FOUND","message":"Resource not found"}
+                        {"code":"COMMON_NOT_FOUND","message":"Resource not found"}
                         """,
                                         org.springframework.test.json.JsonCompareMode.STRICT));
     }
@@ -222,11 +222,15 @@ class WebExceptionHandlerTest {
     })
     void localizesBusinessAndFallbackResponses(
             String language, String notFound, String serverError, String dynamic) throws Exception {
-        assertLocalized("/test/common-error", language, 404, "NOT_FOUND", notFound);
+        assertLocalized("/test/common-error", language, 404, "COMMON_NOT_FOUND", notFound);
         assertLocalized(
                 "/test/dynamic-error?userId=alice", language, 404, "USER_NOT_FOUND", dynamic);
         assertLocalized(
-                "/test/unexpected-error", language, 500, "INTERNAL_SERVER_ERROR", serverError);
+                "/test/unexpected-error",
+                language,
+                500,
+                "COMMON_INTERNAL_SERVER_ERROR",
+                serverError);
         assertLocalized("/test/missing-key", language, 404, "MISSING_TRANSLATION", serverError);
         for (String path :
                 new String[] {"/test/plain-text-error", "/test/plain-text-unexpected-error"}) {
@@ -243,7 +247,7 @@ class WebExceptionHandlerTest {
                                             "{\"code\":\"%s\",\"message\":\"%s\"}"
                                                     .formatted(
                                                             unexpected
-                                                                    ? "INTERNAL_SERVER_ERROR"
+                                                                    ? "COMMON_INTERNAL_SERVER_ERROR"
                                                                     : "USER_NOT_FOUND",
                                                             unexpected ? serverError : dynamic),
                                             org.springframework.test.json.JsonCompareMode.STRICT));
@@ -274,8 +278,9 @@ class WebExceptionHandlerTest {
                     .andExpect(
                             content()
                                     .json(
-                                            "{\"code\":\"NOT_FOUND\",\"message\":\"Resource not found\"}"));
-            assertLocalized("/test/common-error", "de-DE", 404, "NOT_FOUND", "Resource not found");
+                                            "{\"code\":\"COMMON_NOT_FOUND\",\"message\":\"Resource not found\"}"));
+            assertLocalized(
+                    "/test/common-error", "de-DE", 404, "COMMON_NOT_FOUND", "Resource not found");
         } finally {
             java.util.Locale.setDefault(previous);
         }

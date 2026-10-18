@@ -5,13 +5,13 @@ import org.springframework.http.HttpStatus;
 // Common errors are available for projects created from this template.
 @SuppressWarnings("unused")
 public enum CommonError implements ErrorCode {
-    BAD_REQUEST("BAD_REQUEST", HttpStatus.BAD_REQUEST, "error.common.bad_request"),
-    UNAUTHORIZED("UNAUTHORIZED", HttpStatus.UNAUTHORIZED, "error.common.unauthorized"),
-    FORBIDDEN("FORBIDDEN", HttpStatus.FORBIDDEN, "error.common.forbidden"),
-    NOT_FOUND("NOT_FOUND", HttpStatus.NOT_FOUND, "error.common.not_found"),
-    CONFLICT("CONFLICT", HttpStatus.CONFLICT, "error.common.conflict"),
+    BAD_REQUEST("COMMON_BAD_REQUEST", HttpStatus.BAD_REQUEST, "error.common.bad_request"),
+    UNAUTHORIZED("COMMON_UNAUTHORIZED", HttpStatus.UNAUTHORIZED, "error.common.unauthorized"),
+    FORBIDDEN("COMMON_FORBIDDEN", HttpStatus.FORBIDDEN, "error.common.forbidden"),
+    NOT_FOUND("COMMON_NOT_FOUND", HttpStatus.NOT_FOUND, "error.common.not_found"),
+    CONFLICT("COMMON_CONFLICT", HttpStatus.CONFLICT, "error.common.conflict"),
     INTERNAL_SERVER_ERROR(
-            "INTERNAL_SERVER_ERROR",
+            "COMMON_INTERNAL_SERVER_ERROR",
             HttpStatus.INTERNAL_SERVER_ERROR,
             "error.common.internal_server_error");
 

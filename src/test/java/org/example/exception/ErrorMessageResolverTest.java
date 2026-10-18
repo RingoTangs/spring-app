@@ -68,7 +68,7 @@ class ErrorMessageResolverTest {
         source.setAlwaysUseMessageFormat(true);
         ErrorMessageResolver resolver = new ErrorMessageResolver(source);
         assertEquals(
-                new ErrorResponse("NOT_FOUND", "Internal server error"),
+                new ErrorResponse("COMMON_NOT_FOUND", "Internal server error"),
                 resolver.resolve(CommonError.NOT_FOUND, Locale.US, "secret"));
         source.addMessage("error.common.not_found", Locale.US, "invalid {template");
         source.addMessage("error.common.internal_server_error", Locale.US, "invalid {fallback");
