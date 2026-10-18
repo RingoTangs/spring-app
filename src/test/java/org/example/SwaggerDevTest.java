@@ -1,12 +1,15 @@
 package org.example;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import org.example.controller.ExampleController;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -66,5 +69,19 @@ class SwaggerDevTest {
         mockMvc.perform(get("/v3/api-docs/swagger-config"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.url").value("/v3/api-docs"));
+    }
+
+    @Autowired private ApplicationContext context;
+
+    @Test
+    void examplesAreRegisteredInDevelopment() throws Exception {
+        assertEquals(1, context.getBeansOfType(ExampleController.class).size());
+        mockMvc.perform(get("/examples/success"))
+                .andExpect(status().isOk())
+                .andExpect(
+                        content()
+                                .json(
+                                        "{\"message\":\"Hello World!\"}",
+                                        org.springframework.test.json.JsonCompareMode.STRICT));
     }
 }

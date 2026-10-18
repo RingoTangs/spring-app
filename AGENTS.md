@@ -15,7 +15,7 @@ Use JDK 21 and the included Maven Wrapper (Maven 3.9.15) by default; no Maven in
 - `./mvnw spring-boot:run -Dspring-boot.run.profiles=dev`: run locally with Swagger enabled.
 - `java -jar target/spring-app-0.0.1-SNAPSHOT.jar --spring.profiles.active=dev`: run the packaged application.
 
-The default port is 8080. `GET /examples/success` returns JSON containing the message `Hello World!`.
+The default port is 8080. `ExampleController` is registered only with the `dev` profile; default and prod must not expose `/examples/**`. In dev, `GET /examples/success` returns JSON containing the message `Hello World!`.
 
 ## Coding Style & Naming Conventions
 
@@ -23,7 +23,7 @@ Use Spotless with the pinned Google Java Format AOSP style: four-space indentati
 
 ## Testing Guidelines
 
-Use JUnit Jupiter, Spring Boot Test, and MockMvc. Name test classes `*Test` and use descriptive method names. Cover changed HTTP behavior and configuration behavior, particularly Swagger availability in default, `dev`, and `prod` environments. No numeric coverage threshold is configured. Run `./mvnw clean verify` before submitting changes.
+Use JUnit Jupiter, Spring Boot Test, and MockMvc. Name test classes `*Test` and use descriptive method names. Cover changed HTTP behavior and configuration behavior, particularly Swagger availability in default, `dev`, and `prod` environments. Add tests for new endpoints. Tests that exercise example endpoints must explicitly activate dev; default/prod isolation tests must not import the example controller to bypass its profile. No numeric coverage threshold is configured. Run `./mvnw clean verify` before submitting changes.
 
 ## Commit & Pull Request Guidelines
 
@@ -56,3 +56,7 @@ Full Throwables can still contain sensitive information in their messages and st
 HTTP requests use a server-generated UUID v4, response header `X-Request-ID`, and MDC key `requestId`. Never trust or echo a client-provided ID. Keep the ID consistent throughout a synchronous request and reuse the request attribute during ERROR/ASYNC redispatches. Restore any previous MDC value in finally, or remove the key if absent on entry; preserve unrelated MDC fields. Arbitrary async task threads do not inherit this context automatically.
 
 Business logs need not concatenate requestId; the configured log output includes MDC. Do not treat requestId as authentication, add it to `ErrorResponse`, or use it instead of business audit records. Do not add access logging merely to produce an event for every ID.
+
+## Template Scope
+
+Preserve the existing error-code, internationalization, logging, and Request ID conventions when adding business APIs. Introduce databases, authentication, caches, messaging, and deployment infrastructure only when required by the business; do not add them to the template speculatively.

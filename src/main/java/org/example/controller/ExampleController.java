@@ -14,6 +14,7 @@ import org.example.exception.BusinessException;
 import org.example.exception.CommonError;
 import org.example.exception.ErrorResponse;
 import org.jspecify.annotations.Nullable;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+@Profile("dev")
 @RestController
 @RequestMapping(value = "/examples", produces = MediaType.APPLICATION_JSON_VALUE)
 public class ExampleController {
