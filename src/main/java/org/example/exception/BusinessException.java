@@ -6,38 +6,41 @@ import java.io.Serial;
 import java.util.Objects;
 
 public class BusinessException extends RuntimeException {
-
     @Serial private static final long serialVersionUID = 1L;
 
-    private final String code;
-    private final HttpStatus status;
+    private final ErrorCode error;
+    private final Object[] args;
 
-    public BusinessException(String code, String message, HttpStatus status) {
-        super(Objects.requireNonNull(message, "message must not be null"));
-        this.code = Objects.requireNonNull(code, "code must not be null");
-        this.status = Objects.requireNonNull(status, "status must not be null");
-    }
-
-    @Override
-    public String getMessage() {
-        return Objects.requireNonNull(super.getMessage());
-    }
-
-    public String getCode() {
-        return code;
+    private BusinessException(ErrorCode error, Object[] args) {
+        super(Objects.requireNonNull(error, "error must not be null").getMessageKey());
+        Objects.requireNonNull(error.getCode(), "code must not be null");
+        Objects.requireNonNull(error.getStatus(), "status must not be null");
+        Objects.requireNonNull(error.getMessageKey(), "messageKey must not be null");
+        this.error = error;
+        this.args = Objects.requireNonNull(args, "args must not be null").clone();
     }
 
     public static BusinessException of(ErrorCode error) {
-        Objects.requireNonNull(error, "error must not be null");
-        return new BusinessException(error.getCode(), error.getMessage(), error.getStatus());
+        return new BusinessException(error, new Object[0]);
     }
 
-    public static BusinessException of(ErrorCode error, String message) {
-        Objects.requireNonNull(error, "error must not be null");
-        return new BusinessException(error.getCode(), message, error.getStatus());
+    public static BusinessException of(ErrorCode error, Object... args) {
+        return new BusinessException(error, args);
+    }
+
+    public ErrorCode getError() {
+        return error;
+    }
+
+    public Object[] getArgs() {
+        return args.clone();
+    }
+
+    public String getCode() {
+        return error.getCode();
     }
 
     public HttpStatus getStatus() {
-        return status;
+        return error.getStatus();
     }
 }

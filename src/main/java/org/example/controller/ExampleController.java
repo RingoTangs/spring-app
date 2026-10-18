@@ -49,7 +49,7 @@ public class ExampleController {
                             schema = @Schema(implementation = ErrorResponse.class)))
     @GetMapping("/business-error")
     public void businessError() {
-        throw BusinessException.of(CommonError.NOT_FOUND, "示例资源不存在");
+        throw BusinessException.of(CommonError.NOT_FOUND);
     }
 
     @Operation(summary = "未知异常兜底处理示例")

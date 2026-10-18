@@ -1,46 +1,32 @@
 package org.example.exception;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpStatus;
 
 class BusinessExceptionTest {
-
     @Test
-    void rejectsNullConstructorArguments() {
-        assertThrows(
-                NullPointerException.class,
-                () -> new BusinessException(null, "message", HttpStatus.BAD_REQUEST));
-        assertThrows(
-                NullPointerException.class,
-                () -> new BusinessException("CODE", null, HttpStatus.BAD_REQUEST));
-        assertThrows(
-                NullPointerException.class, () -> new BusinessException("CODE", "message", null));
-    }
-
-    @Test
-    void rejectsNullErrorCode() {
+    void rejectsNullArguments() {
         assertThrows(NullPointerException.class, () -> BusinessException.of(null));
-    }
-
-    @Test
-    void rejectsNullCustomMessageArguments() {
-        assertThrows(NullPointerException.class, () -> BusinessException.of(null, "message"));
+        assertThrows(NullPointerException.class, () -> BusinessException.of(null, "value"));
         assertThrows(
                 NullPointerException.class,
-                () -> BusinessException.of(CommonError.NOT_FOUND, null));
+                () -> BusinessException.of(CommonError.NOT_FOUND, (Object[]) null));
     }
 
     @Test
-    void customMessagesDoNotChangeDefaultMessage() {
-        BusinessException first = BusinessException.of(CommonError.NOT_FOUND, "用户 alice 不存在");
-        BusinessException second = BusinessException.of(CommonError.NOT_FOUND, "用户 bob 不存在");
-
-        assertEquals("用户 alice 不存在", first.getMessage());
-        assertEquals("用户 bob 不存在", second.getMessage());
-        assertEquals("资源不存在", CommonError.NOT_FOUND.getMessage());
-        assertEquals("资源不存在", BusinessException.of(CommonError.NOT_FOUND).getMessage());
+    void retainsDefinitionAndCopiesArguments() {
+        Object[] args = {"alice"};
+        BusinessException exception = BusinessException.of(CommonError.NOT_FOUND, args);
+        args[0] = "bob";
+        Object[] returned = exception.getArgs();
+        returned[0] = "carol";
+        assertEquals("alice", exception.getArgs()[0]);
+        assertSame(CommonError.NOT_FOUND, exception.getError());
+        assertEquals(CommonError.NOT_FOUND.getCode(), exception.getCode());
+        assertEquals(CommonError.NOT_FOUND.getStatus(), exception.getStatus());
+        assertEquals("common.not_found", exception.getMessage());
+        assertEquals(0, BusinessException.of(CommonError.NOT_FOUND).getArgs().length);
+        assertEquals("alice", BusinessException.of(CommonError.NOT_FOUND, "alice").getArgs()[0]);
     }
 }

@@ -116,6 +116,57 @@ class ValidationTest {
                 "请求参数类型错误");
     }
 
+    @Test
+    void requestErrorsAndReturnValidationSupportEnglish() throws Exception {
+        assertBadRequest(
+                mockMvc.perform(
+                        post("/examples/validation/body")
+                                .header("Accept-Language", "en-US")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{}")),
+                "VALIDATION_FAILED",
+                "Request validation failed");
+        assertBadRequest(
+                mockMvc.perform(
+                        get("/examples/validation/query")
+                                .header("Accept-Language", "en-US")
+                                .param("age", "0")),
+                "VALIDATION_FAILED",
+                "Request validation failed");
+        assertBadRequest(
+                mockMvc.perform(
+                        get("/examples/validation/query").header("Accept-Language", "en-US")),
+                "MISSING_PARAMETER",
+                "Required request parameter is missing");
+        assertBadRequest(
+                mockMvc.perform(get("/test/validation/header").header("Accept-Language", "en-US")),
+                "MISSING_HEADER",
+                "Required request header is missing");
+        assertBadRequest(
+                mockMvc.perform(
+                        get("/examples/validation/query")
+                                .header("Accept-Language", "en-US")
+                                .param("age", "invalid")),
+                "INVALID_PARAMETER_TYPE",
+                "Invalid request parameter type");
+        assertBadRequest(
+                mockMvc.perform(
+                        post("/examples/validation/body")
+                                .header("Accept-Language", "en-US")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{")),
+                "INVALID_REQUEST_BODY",
+                "Request body is missing or malformed");
+        mockMvc.perform(get("/test/validation/return").header("Accept-Language", "en-US"))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(
+                        content()
+                                .json(
+                                        "{\"code\":\"INTERNAL_SERVER_ERROR\",\"message\":\"Internal server error\"}",
+                                        JsonCompareMode.STRICT));
+    }
+
     private void assertBadRequest(ResultActions result, String code, String message)
             throws Exception {
         result.andExpect(status().isBadRequest())

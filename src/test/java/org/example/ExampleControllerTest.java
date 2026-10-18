@@ -41,7 +41,7 @@ class ExampleControllerTest {
                         content()
                                 .json(
                                         """
-                        {"code":"NOT_FOUND","message":"示例资源不存在"}
+                        {"code":"NOT_FOUND","message":"资源不存在"}
                         """,
                                         JsonCompareMode.STRICT));
     }

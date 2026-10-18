@@ -4,7 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import org.example.exception.CommonError;
-import org.example.exception.ErrorResponse;
+import org.example.exception.ErrorMessageResolver;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,6 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.servlet.support.RequestContextUtils;
 
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
@@ -29,8 +30,12 @@ public class WebExceptionFallbackConfiguration implements WebMvcConfigurer {
 
     private final ObjectMapper objectMapper;
 
-    public WebExceptionFallbackConfiguration(ObjectMapper objectMapper) {
+    private final ErrorMessageResolver messages;
+
+    public WebExceptionFallbackConfiguration(
+            ObjectMapper objectMapper, ErrorMessageResolver messages) {
         this.objectMapper = objectMapper;
+        this.messages = messages;
     }
 
     @Override
@@ -54,7 +59,7 @@ public class WebExceptionFallbackConfiguration implements WebMvcConfigurer {
             CommonError error = CommonError.INTERNAL_SERVER_ERROR;
             byte[] body =
                     objectMapper.writeValueAsBytes(
-                            new ErrorResponse(error.getCode(), error.getMessage()));
+                            messages.resolve(error, RequestContextUtils.getLocale(request)));
             response.resetBuffer();
             response.setStatus(error.getStatus().value());
             response.setCharacterEncoding(StandardCharsets.UTF_8.name());

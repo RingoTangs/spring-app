@@ -13,60 +13,68 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
+import java.util.Locale;
+
 @RestControllerAdvice
 public class WebExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(WebExceptionHandler.class);
 
+    private final ErrorMessageResolver messages;
+
+    public WebExceptionHandler(ErrorMessageResolver messages) {
+        this.messages = messages;
+    }
+
     @ExceptionHandler(BindException.class)
-    public ResponseEntity<ErrorResponse> handleValidation(BindException exception) {
-        return errorResponse(RequestError.VALIDATION_FAILED);
+    public ResponseEntity<ErrorResponse> handleValidation(BindException exception, Locale locale) {
+        return errorResponse(RequestError.VALIDATION_FAILED, locale);
     }
 
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ResponseEntity<ErrorResponse> handleMissingParameter(
-            MissingServletRequestParameterException exception) {
-        return errorResponse(RequestError.MISSING_PARAMETER);
+            MissingServletRequestParameterException exception, Locale locale) {
+        return errorResponse(RequestError.MISSING_PARAMETER, locale);
     }
 
     @ExceptionHandler(MissingRequestHeaderException.class)
     public ResponseEntity<ErrorResponse> handleMissingHeader(
-            MissingRequestHeaderException exception) {
-        return errorResponse(RequestError.MISSING_HEADER);
+            MissingRequestHeaderException exception, Locale locale) {
+        return errorResponse(RequestError.MISSING_HEADER, locale);
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ErrorResponse> handleInvalidParameterType(
-            MethodArgumentTypeMismatchException exception) {
-        return errorResponse(RequestError.INVALID_PARAMETER_TYPE);
+            MethodArgumentTypeMismatchException exception, Locale locale) {
+        return errorResponse(RequestError.INVALID_PARAMETER_TYPE, locale);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorResponse> handleInvalidRequestBody(
-            HttpMessageNotReadableException exception) {
-        return errorResponse(RequestError.INVALID_REQUEST_BODY);
+            HttpMessageNotReadableException exception, Locale locale) {
+        return errorResponse(RequestError.INVALID_REQUEST_BODY, locale);
     }
 
     @ExceptionHandler(HandlerMethodValidationException.class)
     public ResponseEntity<ErrorResponse> handleMethodValidation(
-            HandlerMethodValidationException exception) {
+            HandlerMethodValidationException exception, Locale locale) {
         if (exception.isForReturnValue()) {
             log.error("Controller return value validation failed", exception);
-            return errorResponse(CommonError.INTERNAL_SERVER_ERROR);
+            return errorResponse(CommonError.INTERNAL_SERVER_ERROR, locale);
         }
-        return errorResponse(RequestError.VALIDATION_FAILED);
+        return errorResponse(RequestError.VALIDATION_FAILED, locale);
     }
 
-    private ResponseEntity<ErrorResponse> errorResponse(ErrorCode error) {
+    private ResponseEntity<ErrorResponse> errorResponse(
+            ErrorCode error, Locale locale, Object... args) {
         return ResponseEntity.status(error.getStatus())
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(new ErrorResponse(error.getCode(), error.getMessage()));
+                .body(messages.resolve(error, locale, args));
     }
 
     @ExceptionHandler(BusinessException.class)
-    public ResponseEntity<ErrorResponse> handleBusinessException(BusinessException exception) {
-        return ResponseEntity.status(exception.getStatus())
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(new ErrorResponse(exception.getCode(), exception.getMessage()));
+    public ResponseEntity<ErrorResponse> handleBusinessException(
+            BusinessException exception, Locale locale) {
+        return errorResponse(exception.getError(), locale, exception.getArgs());
     }
 }

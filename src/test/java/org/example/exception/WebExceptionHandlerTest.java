@@ -5,6 +5,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import org.example.config.ErrorI18nConfiguration;
 import org.example.config.WebExceptionFallbackConfiguration;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -19,9 +20,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-@WebMvcTest(WebExceptionHandlerTest.TestController.class)
+@WebMvcTest(
+        value = WebExceptionHandlerTest.TestController.class,
+        properties = "spring.messages.basename=messages,test-messages")
 @Import({
     WebExceptionHandler.class,
+    ErrorMessageResolver.class,
+    ErrorI18nConfiguration.class,
     WebExceptionFallbackConfiguration.class,
     WebExceptionHandlerTest.TestController.class
 })
@@ -55,7 +60,7 @@ class WebExceptionHandlerTest {
                         content()
                                 .json(
                                         """
-                        {"code":"USER_NOT_FOUND","message":"用户不存在"}
+                        {"code":"USER_NOT_FOUND","message":"用户 alice 不存在"}
                         """,
                                         org.springframework.test.json.JsonCompareMode.STRICT));
     }
@@ -65,7 +70,25 @@ class WebExceptionHandlerTest {
 
         @GetMapping("/test/dynamic-error")
         String dynamicError(@RequestParam String userId) {
-            throw BusinessException.of(CommonError.NOT_FOUND, "用户 %s 不存在".formatted(userId));
+            throw BusinessException.of(TestError.USER_NOT_FOUND, userId);
+        }
+
+        @GetMapping("/test/missing-key")
+        String missingKey() {
+            throw BusinessException.of(
+                    new ErrorCode() {
+                        public String getCode() {
+                            return "MISSING_TRANSLATION";
+                        }
+
+                        public HttpStatus getStatus() {
+                            return HttpStatus.NOT_FOUND;
+                        }
+
+                        public String getMessageKey() {
+                            return "missing.secret.key";
+                        }
+                    });
         }
 
         @GetMapping("/test/common-error")
@@ -75,17 +98,30 @@ class WebExceptionHandlerTest {
 
         @GetMapping("/test/custom-error")
         String customError() {
-            throw BusinessException.of(TestError.USER_NOT_FOUND);
+            throw BusinessException.of(TestError.USER_NOT_FOUND, "alice");
         }
 
         @GetMapping("/test/business-error")
         String businessError(@RequestParam HttpStatus status) {
-            throw new BusinessException("BUSINESS_ERROR", "业务操作失败", status);
+            throw BusinessException.of(
+                    new ErrorCode() {
+                        public String getCode() {
+                            return "BUSINESS_ERROR";
+                        }
+
+                        public HttpStatus getStatus() {
+                            return status;
+                        }
+
+                        public String getMessageKey() {
+                            return "test.business_error";
+                        }
+                    });
         }
 
         @GetMapping(value = "/test/plain-text-error", produces = MediaType.TEXT_PLAIN_VALUE)
         String plainTextError() {
-            throw new BusinessException("USER_NOT_FOUND", "用户不存在", HttpStatus.NOT_FOUND);
+            throw BusinessException.of(TestError.USER_NOT_FOUND, "alice");
         }
 
         @GetMapping("/test/unexpected-error")
@@ -161,7 +197,7 @@ class WebExceptionHandlerTest {
                         content()
                                 .json(
                                         """
-                        {"code":"NOT_FOUND","message":"用户 alice 不存在"}
+                        {"code":"USER_NOT_FOUND","message":"用户 alice 不存在"}
                         """,
                                         org.springframework.test.json.JsonCompareMode.STRICT));
     }
@@ -175,9 +211,73 @@ class WebExceptionHandlerTest {
                         content()
                                 .json(
                                         """
-                        {"code":"USER_NOT_FOUND","message":"用户不存在"}
+                        {"code":"USER_NOT_FOUND","message":"用户 alice 不存在"}
                         """,
                                         org.springframework.test.json.JsonCompareMode.STRICT));
+    }
+
+    @ParameterizedTest
+    @org.junit.jupiter.params.provider.CsvSource({
+        "zh-CN,资源不存在,服务器内部错误,用户 alice 不存在",
+        "en-US,Resource not found,Internal server error,User alice not found",
+        "fr-FR,资源不存在,服务器内部错误,用户 alice 不存在"
+    })
+    void localizesBusinessAndFallbackResponses(
+            String language, String notFound, String serverError, String dynamic) throws Exception {
+        assertLocalized("/test/common-error", language, 404, "NOT_FOUND", notFound);
+        assertLocalized(
+                "/test/dynamic-error?userId=alice", language, 404, "USER_NOT_FOUND", dynamic);
+        assertLocalized(
+                "/test/unexpected-error", language, 500, "INTERNAL_SERVER_ERROR", serverError);
+        assertLocalized("/test/missing-key", language, 404, "MISSING_TRANSLATION", serverError);
+        for (String path :
+                new String[] {"/test/plain-text-error", "/test/plain-text-unexpected-error"}) {
+            boolean unexpected = path.contains("unexpected");
+            mockMvc.perform(
+                            get(path)
+                                    .accept(MediaType.TEXT_PLAIN)
+                                    .header("Accept-Language", language))
+                    .andExpect(status().is(unexpected ? 500 : 404))
+                    .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                    .andExpect(
+                            content()
+                                    .json(
+                                            "{\"code\":\"%s\",\"message\":\"%s\"}"
+                                                    .formatted(
+                                                            unexpected
+                                                                    ? "INTERNAL_SERVER_ERROR"
+                                                                    : "USER_NOT_FOUND",
+                                                            unexpected ? serverError : dynamic),
+                                            org.springframework.test.json.JsonCompareMode.STRICT));
+        }
+    }
+
+    private void assertLocalized(
+            String path, String language, int statusCode, String code, String message)
+            throws Exception {
+        mockMvc.perform(get(path).header("Accept-Language", language))
+                .andExpect(status().is(statusCode))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(
+                        content()
+                                .json(
+                                        "{\"code\":\"%s\",\"message\":\"%s\"}"
+                                                .formatted(code, message),
+                                        org.springframework.test.json.JsonCompareMode.STRICT));
+    }
+
+    @Test
+    void defaultLanguageDoesNotDependOnSystemLocale() throws Exception {
+        java.util.Locale previous = java.util.Locale.getDefault();
+        try {
+            java.util.Locale.setDefault(java.util.Locale.ENGLISH);
+            mockMvc.perform(get("/test/common-error"))
+                    .andExpect(status().isNotFound())
+                    .andExpect(content().json("{\"code\":\"NOT_FOUND\",\"message\":\"资源不存在\"}"));
+            assertLocalized("/test/common-error", "de-DE", 404, "NOT_FOUND", "资源不存在");
+        } finally {
+            java.util.Locale.setDefault(previous);
+        }
     }
 
     private enum TestError implements ErrorCode {
@@ -194,8 +294,8 @@ class WebExceptionHandlerTest {
         }
 
         @Override
-        public String getMessage() {
-            return "用户不存在";
+        public String getMessageKey() {
+            return "test.user_not_found";
         }
     }
 }
