@@ -15,3 +15,7 @@ springdoc:
     enabled: false
   swagger-ui:
     enabled: false
+
+logging:
+  pattern:
+    level: "%5p [requestId=%X{requestId:-}]"

@@ -1,5 +1,6 @@
 package org.example;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -30,6 +31,31 @@ class ExampleControllerTest {
                         {"message":"Hello World!"}
                         """,
                                         JsonCompareMode.STRICT));
+    }
+
+    @Test
+    void independentRequestsReceiveDistinctServerIds() throws Exception {
+        String first =
+                mockMvc.perform(
+                                get("/examples/success")
+                                        .header("X-Request-ID", "malicious-client-id"))
+                        .andExpect(status().isOk())
+                        .andReturn()
+                        .getResponse()
+                        .getHeader("X-Request-ID");
+        String second =
+                mockMvc.perform(get("/examples/success"))
+                        .andExpect(status().isOk())
+                        .andReturn()
+                        .getResponse()
+                        .getHeader("X-Request-ID");
+        assertNotNull(first);
+        assertNotNull(second);
+        assertEquals(4, java.util.UUID.fromString(first).version());
+        assertEquals(4, java.util.UUID.fromString(second).version());
+        assertNotEquals("malicious-client-id", first);
+        assertNotEquals(first, second);
+        assertNull(org.slf4j.MDC.get("requestId"));
     }
 
     @Test

@@ -11,11 +11,14 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 
+import org.example.config.RequestIdConfiguration;
+import org.example.config.RequestIdFilter;
 import org.example.config.WebExceptionFallbackConfiguration;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -30,6 +33,7 @@ import org.springframework.web.bind.annotation.RestController;
         value = WebExceptionHandlerTest.TestController.class,
         properties = "spring.messages.basename=messages,test-messages")
 @Import({
+    RequestIdConfiguration.class,
     WebExceptionHandler.class,
     ErrorMessageResolver.class,
     WebExceptionFallbackConfiguration.class,
@@ -296,24 +300,42 @@ class WebExceptionHandlerTest {
     @Test
     void unexpectedErrorLogsThrowableWithoutRawRequestContext() throws Exception {
         Logger logger = (Logger) LoggerFactory.getLogger(WebExceptionFallbackConfiguration.class);
-        ListAppender<ILoggingEvent> appender = new ListAppender<>();
+        ListAppender<ILoggingEvent> appender =
+                new ListAppender<>() {
+                    @Override
+                    protected void append(ILoggingEvent event) {
+                        event.prepareForDeferredProcessing();
+                        super.append(event);
+                    }
+                };
         appender.start();
         logger.addAppender(appender);
         try {
-            mockMvc.perform(
-                            get("/test/unexpected-error/private-uri-marker")
-                                    .queryParam("token", "private-query-marker")
-                                    .header("Authorization", "Bearer private-header-marker"))
-                    .andExpect(status().isInternalServerError())
-                    .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                    .andExpect(
-                            content()
-                                    .json(
-                                            "{\"code\":\"COMMON_INTERNAL_SERVER_ERROR\",\"message\":\"Internal server error\"}",
-                                            org.springframework.test.json.JsonCompareMode.STRICT));
+            var result =
+                    mockMvc.perform(
+                                    get("/test/unexpected-error/private-uri-marker")
+                                            .queryParam("token", "private-query-marker")
+                                            .header(
+                                                    "Authorization",
+                                                    "Bearer private-header-marker"))
+                            .andExpect(status().isInternalServerError())
+                            .andExpect(
+                                    content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                            .andExpect(
+                                    content()
+                                            .json(
+                                                    "{\"code\":\"COMMON_INTERNAL_SERVER_ERROR\",\"message\":\"Internal server error\"}",
+                                                    org.springframework.test.json.JsonCompareMode
+                                                            .STRICT))
+                            .andReturn();
+            String requestId = result.getResponse().getHeader(RequestIdFilter.HEADER_NAME);
+            assertNotNull(requestId);
+            assertEquals(4, java.util.UUID.fromString(requestId).version());
+            assertNull(MDC.get(RequestIdFilter.MDC_KEY));
             assertEquals(1, appender.list.size());
             ILoggingEvent event = appender.list.getFirst();
             assertEquals(Level.ERROR, event.getLevel());
+            assertEquals(requestId, event.getMDCPropertyMap().get(RequestIdFilter.MDC_KEY));
             assertEquals("Unhandled exception during HTTP request", event.getFormattedMessage());
             assertTrue(event.getArgumentArray() == null || event.getArgumentArray().length == 0);
             var throwable = event.getThrowableProxy();
@@ -331,7 +353,14 @@ class WebExceptionHandlerTest {
     void expectedBusinessAndRequestErrorsDoNotLogErrorStacks() throws Exception {
         Logger handler = (Logger) LoggerFactory.getLogger(WebExceptionHandler.class);
         Logger fallback = (Logger) LoggerFactory.getLogger(WebExceptionFallbackConfiguration.class);
-        ListAppender<ILoggingEvent> appender = new ListAppender<>();
+        ListAppender<ILoggingEvent> appender =
+                new ListAppender<>() {
+                    @Override
+                    protected void append(ILoggingEvent event) {
+                        event.prepareForDeferredProcessing();
+                        super.append(event);
+                    }
+                };
         appender.start();
         handler.addAppender(appender);
         fallback.addAppender(appender);
@@ -348,6 +377,34 @@ class WebExceptionHandlerTest {
             fallback.detachAppender(appender);
             appender.stop();
         }
+    }
+
+    @ParameterizedTest
+    @org.junit.jupiter.params.provider.CsvSource({
+        "/test/common-error,404",
+        "/test/business-error,400",
+        "/test/missing,404"
+    })
+    void errorResponsesIncludeRequestId(String path, int expectedStatus) throws Exception {
+        var response =
+                mockMvc.perform(get(path))
+                        .andExpect(status().is(expectedStatus))
+                        .andReturn()
+                        .getResponse();
+        String id = response.getHeader(RequestIdFilter.HEADER_NAME);
+        assertNotNull(id);
+        assertEquals(4, java.util.UUID.fromString(id).version());
+        assertNull(MDC.get(RequestIdFilter.MDC_KEY));
+    }
+
+    @Test
+    void methodNotAllowedIncludesRequestId() throws Exception {
+        var response =
+                mockMvc.perform(post("/test/business-error"))
+                        .andExpect(status().isMethodNotAllowed())
+                        .andReturn()
+                        .getResponse();
+        assertNotNull(response.getHeader(RequestIdFilter.HEADER_NAME));
     }
 
     private enum TestError implements ErrorCode {

@@ -50,3 +50,9 @@ Expected `BusinessException` and framework errors mapped to `RequestError` must 
 Use SLF4J parameterized logging, for example `log.info("User created: userId={}", userId)`. Do not actively log passwords, access/refresh tokens, Authorization headers, Cookie/Session credentials, API keys, private keys, other secrets, sensitive request/response data, or unreviewed sensitive business fields. Do not serialize entire unreviewed request objects or directly log raw request URIs/query strings in global exception logs.
 
 Full Throwables can still contain sensitive information in their messages and stacks: removing a URI from the log context does not guarantee secret-free logs. Keep secrets out of internally controlled exception messages. Assess third-party exceptions before logging their original Throwable; where necessary, log a controlled summary and exception type. Do not blanket-suppress system exception stacks or introduce a global regex masking framework, new logging service abstraction, or logging-specific exception hierarchy.
+
+## Request ID Guidelines
+
+HTTP requests use a server-generated UUID v4, response header `X-Request-ID`, and MDC key `requestId`. Never trust or echo a client-provided ID. Keep the ID consistent throughout a synchronous request and reuse the request attribute during ERROR/ASYNC redispatches. Restore any previous MDC value in finally, or remove the key if absent on entry; preserve unrelated MDC fields. Arbitrary async task threads do not inherit this context automatically.
+
+Business logs need not concatenate requestId; the configured log output includes MDC. Do not treat requestId as authentication, add it to `ErrorResponse`, or use it instead of business audit records. Do not add access logging merely to produce an event for every ID.

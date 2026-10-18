@@ -50,6 +50,26 @@ SPRING_PROFILES_ACTIVE=prod ./mvnw spring-boot:run
 
 禁止主动记录密码、Token、认证头、Cookie/Session 凭据、API Key、私钥等敏感信息，也不要整体输出未经审查的请求/响应对象。完整 Throwable 的 message 和堆栈仍可能包含敏感内容：内部异常不要嵌入秘密，第三方异常按风险选择原始 Throwable 或受控摘要与异常类型。详细级别和敏感信息规范见 AGENTS.md。
 
+## Request ID
+
+每个进入应用 Filter 的新 HTTP 请求都由服务端生成 UUID v4 requestId，忽略客户端传入的 `X-Request-ID`。成功及应用处理的错误响应通过 `X-Request-ID` 响应头返回该 ID，业务 JSON 结构不变。
+
+```sh
+curl -i http://localhost:8080/examples/success
+```
+
+示例响应头：
+
+```http
+X-Request-ID: 7d9c25a8-f03b-4e61-8d12-10e847ae6b02
+```
+
+前端可用 `response.headers.get("X-Request-ID")` 读取并展示问题编号，开发者据此查询已有日志。MDC Key 为 `requestId`；默认/dev 文本日志显示该字段，prod JSON 日志通过原生 MDC 支持输出同名字段。非请求日志没有 ID 是正常的，成功请求不会因此自动生成访问日志。
+
+同一请求的 REQUEST、ERROR（含嵌套 ERROR）及 ASYNC 再分派复用请求属性中的 ID；每次分派结束会清理或恢复当前线程 MDC。当前不自动传播到 Callable、线程池、CompletableFuture 等异步任务线程，也不提供分布式 traceId/spanId。未进入 Filter 的请求（例如代理拒绝）不保证返回应用 ID；响应已经提交时无法补写 Header。
+
+当前未配置全局 CORS。未来跨域部署时，需按既有来源与凭据策略将 `X-Request-ID` 加入 `exposedHeaders`，浏览器才能读取，不能为此全局放行跨域。requestId 不是身份凭证，不能作为授权依据或业务审计记录。
+
 ## 错误响应国际化
 
 错误响应保持 `{ "code": "...", "message": "..." }`，HTTP 状态由 `ErrorCode` 定义。
